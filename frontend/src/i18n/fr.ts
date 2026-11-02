@@ -55,10 +55,10 @@ export const fr = {
   "nav.deconnexion": "Se déconnecter",
 
   /* -------------------------------------------------------------- Login */
-  "login.accroche": "Toute notre base clients, au même endroit.",
+  "login.accroche": "Toute l'activité de l'agence, au même endroit.",
   "login.pitch":
-    "Nous centralisons nos fichiers, filtrons nos clients par pays, secteur ou commercial, et adressons nos campagnes aux bons interlocuteurs.",
-  "login.pied": "Outil interne, accès réservé aux collaborateurs.",
+    "Nous suivons nos prospects, nos contrats et nos encaissements commercial par commercial, pour piloter le portefeuille au quotidien.",
+  "login.pied": "GE SARL, agent général CHANAS Assurances. Accès réservé aux collaborateurs.",
   "login.titre": "Connexion",
   "login.sousTitre": "Renseignez vos identifiants pour accéder au CRM.",
   "login.identifiant": "Identifiant",

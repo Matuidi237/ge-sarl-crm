@@ -1,6 +1,6 @@
 /* ==========================================================================
-   CRM EasyTech Group SA — système de design
-   Barre latérale au bleu du logo, surfaces claires chaudes, accents de marque.
+   CRM GE SARL, système de design
+   Bleu et bleu nuit relevés sur le logo, surfaces claires chaudes.
    ========================================================================== */
 
 :root {
@@ -17,13 +17,15 @@
   --shell-line: rgba(255, 255, 255, 0.09);
   --shell-ink: #a79f9c;
 
-  /* Marque — bleu échantillonné sur le logo officiel */
-  --brand: #1f86c8;
-  --brand-strong: #1a76b4; /* fonds pleins portant du texte blanc — 4.9:1 */
-  --brand-600: #1a76b4;
-  --brand-700: #155e8e;
-  --brand-100: #e7f2fa;
-  --brand-200: #c8e1f3;
+  /* Marque : médianes mesurées sur le logo GE SARL. Le bleu porte le blanc à
+     6.2:1, il sert donc directement de fond plein, sans pas plus foncé. */
+  --brand: #1e6597;
+  --brand-strong: #1e6597;
+  --brand-600: #1a5885;
+  --brand-700: #174a70;
+  --brand-100: #e8f0f7;
+  --brand-200: #c9dcec;
+  --brand-nuit: #172840; /* bleu nuit du logo, panneau de connexion */
 
   /* Gris de marque */
   --gray-brand: #777271;
@@ -1255,28 +1257,38 @@ tbody tr:hover td {
   gap: 28px;
   position: relative;
   overflow: hidden;
-  background-color: #08243e;
-  /* Dégradé vertical, quasi opaque en bas où se pose le texte et plus léger en
-     haut pour laisser respirer la photo. Indispensable ici : le visuel comporte
-     un écran clair et des fenêtres lumineuses qui rendraient le blanc illisible. */
-  background-image: linear-gradient(
-      to top,
-      rgba(7, 22, 36, 0.93) 0%,
-      rgba(7, 22, 36, 0.86) 26%,
-      rgba(7, 22, 36, 0.58) 55%,
-      rgba(7, 22, 36, 0.42) 100%
+  /* Pas encore de photo de l'agence : le panneau porte le bleu nuit du logo,
+     éclairé d'un halo au bleu de marque. Le jour où une photo arrive, la
+     placer en dernière couche de background-image sous un dégradé sombre
+     en bas, là où se pose le texte. */
+  background-color: var(--brand-nuit);
+  background-image: radial-gradient(
+      120% 90% at 85% 10%,
+      rgba(30, 101, 151, 0.55) 0%,
+      rgba(30, 101, 151, 0) 60%
     ),
-    url("/brand/login-visuel.jpg");
-  background-size: cover;
-  /* Légèrement au-dessus du centre : garde le sujet visible malgré le recadrage. */
-  background-position: 50% 35%;
+    linear-gradient(to top, #111e31 0%, var(--brand-nuit) 60%);
+}
+
+/* L'emblème du logo en filigrane, coupé par le bord droit : il signe le
+   panneau sans concurrencer le logo complet du formulaire. */
+.login-aside::before {
+  content: "";
+  position: absolute;
+  top: 9%;
+  right: -12%;
+  width: 72%;
+  aspect-ratio: 374 / 332;
+  background: url("/brand/ge-sarl-embleme-blanc.png") center / contain no-repeat;
+  opacity: 0.09;
+  pointer-events: none;
 }
 
 .login-logo {
   display: block;
-  width: 168px;
+  width: 132px;
   height: auto;
-  margin: 0 auto 30px;
+  margin: 0 auto 26px;
 }
 
 .lc-help {

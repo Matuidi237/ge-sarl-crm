@@ -46,7 +46,7 @@ export default function LoginPage() {
         </div>
 
         <form className="login-card" onSubmit={handleSubmit}>
-          <img src="/brand/easytech-logo.png" alt="EasyTech Group" className="login-logo" />
+          <img src="/brand/ge-sarl-logo.png" alt="GE SARL" className="login-logo" />
 
           <h1>{t("login.titre")}</h1>
           <p className="lc-sub">{t("login.sousTitre")}</p>

@@ -55,10 +55,10 @@ export const en: Record<keyof typeof fr, string> = {
   "nav.deconnexion": "Sign out",
 
   /* -------------------------------------------------------------- Login */
-  "login.accroche": "Our entire client base, in one place.",
+  "login.accroche": "All of the agency's activity, in one place.",
   "login.pitch":
-    "We bring our files together, filter our clients by country, sector or account manager, and send our campaigns to the right people.",
-  "login.pied": "Internal tool, staff access only.",
+    "We track our prospects, policies and premium collections salesperson by salesperson, to steer the portfolio day to day.",
+  "login.pied": "GE SARL, CHANAS Assurances general agent. Staff access only.",
   "login.titre": "Sign in",
   "login.sousTitre": "Enter your credentials to access the CRM.",
   "login.identifiant": "Username",
