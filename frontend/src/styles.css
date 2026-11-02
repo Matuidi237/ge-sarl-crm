@@ -1258,22 +1258,21 @@ tbody tr:hover td {
   position: relative;
   overflow: hidden;
   background-color: var(--brand-nuit);
-  /* Dégradé au bleu nuit du logo, quasi opaque en bas où se pose le texte et
-     léger en haut pour laisser voir le visage. Indispensable : la table et la
-     chemise claires du premier plan rendraient le blanc illisible. */
+  /* Dégradé au bleu nuit du logo, quasi opaque en bas où se pose le texte.
+     Il doit l'être franchement : sous le texte la photo n'est que table et
+     dossier blancs, sur lesquels le blanc disparaîtrait. */
   background-image: linear-gradient(
       to top,
-      rgba(17, 30, 49, 0.94) 0%,
-      rgba(17, 30, 49, 0.84) 28%,
-      rgba(23, 40, 64, 0.45) 58%,
-      rgba(23, 40, 64, 0.18) 100%
+      rgba(17, 30, 49, 0.95) 0%,
+      rgba(17, 30, 49, 0.88) 30%,
+      rgba(23, 40, 64, 0.5) 56%,
+      rgba(23, 40, 64, 0.22) 100%
     ),
     url("/brand/login-visuel.jpg");
   background-size: cover;
-  /* Photo en paysage dans un panneau presque carré : on recadre sur la
-     conseillère, à un tiers de la largeur, plutôt qu'au centre où tombe
-     la nuque floue du client. */
-  background-position: 36% 30%;
+  /* Photo en portrait : on la cale vers le bas pour que le stylo et les mains
+     tombent au-dessus du texte, et que le haut flou soit ce qu'on sacrifie. */
+  background-position: 50% 85%;
 }
 
 .login-logo {
