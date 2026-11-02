@@ -1257,31 +1257,23 @@ tbody tr:hover td {
   gap: 28px;
   position: relative;
   overflow: hidden;
-  /* Pas encore de photo de l'agence : le panneau porte le bleu nuit du logo,
-     éclairé d'un halo au bleu de marque. Le jour où une photo arrive, la
-     placer en dernière couche de background-image sous un dégradé sombre
-     en bas, là où se pose le texte. */
   background-color: var(--brand-nuit);
-  background-image: radial-gradient(
-      120% 90% at 85% 10%,
-      rgba(30, 101, 151, 0.55) 0%,
-      rgba(30, 101, 151, 0) 60%
+  /* Dégradé au bleu nuit du logo, quasi opaque en bas où se pose le texte et
+     léger en haut pour laisser voir le visage. Indispensable : la table et la
+     chemise claires du premier plan rendraient le blanc illisible. */
+  background-image: linear-gradient(
+      to top,
+      rgba(17, 30, 49, 0.94) 0%,
+      rgba(17, 30, 49, 0.84) 28%,
+      rgba(23, 40, 64, 0.45) 58%,
+      rgba(23, 40, 64, 0.18) 100%
     ),
-    linear-gradient(to top, #111e31 0%, var(--brand-nuit) 60%);
-}
-
-/* L'emblème du logo en filigrane, coupé par le bord droit : il signe le
-   panneau sans concurrencer le logo complet du formulaire. */
-.login-aside::before {
-  content: "";
-  position: absolute;
-  top: 9%;
-  right: -12%;
-  width: 72%;
-  aspect-ratio: 374 / 332;
-  background: url("/brand/ge-sarl-embleme-blanc.png") center / contain no-repeat;
-  opacity: 0.09;
-  pointer-events: none;
+    url("/brand/login-visuel.jpg");
+  background-size: cover;
+  /* Photo en paysage dans un panneau presque carré : on recadre sur la
+     conseillère, à un tiers de la largeur, plutôt qu'au centre où tombe
+     la nuque floue du client. */
+  background-position: 36% 30%;
 }
 
 .login-logo {
