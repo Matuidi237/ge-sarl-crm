@@ -24,13 +24,14 @@ export type EntreeNav = {
   requiert?: Permission;
 };
 
-/** Vue par défaut : celle que tout le monde avait jusqu'ici. */
+/**
+ * Vue par défaut. Newsletters et commandes à chiffrer, héritées du CRM
+ * d'origine, n'ont pas d'usage chez GE SARL et ont quitté le menu.
+ */
 const NAV_STANDARD: EntreeNav[] = [
   { to: "/", cle: "nav.dashboard", icone: "dashboard", end: true },
   { to: "/clients", cle: "nav.clients", icone: "users" },
   { to: "/import", cle: "nav.import", icone: "import", requiert: "clients.importer" },
-  { to: "/newsletters", cle: "nav.newsletters", icone: "mail", requiert: "newsletters.voir" },
-  { to: "/a-chiffrer", cle: "nav.aChiffrer", icone: "coins", requiert: "ventes.cout" },
 ];
 
 /**
@@ -43,6 +44,15 @@ const NAV_DG: EntreeNav[] = [
   { to: "/commerciaux", cle: "nav.commerciaux", icone: "team" },
   { to: "/rapports-equipe", cle: "nav.rapportsEquipe", icone: "file" },
   { to: "/clients", cle: "nav.clients", icone: "users" },
+];
+
+/**
+ * L'administrateur pilote la même agence que la directrice : même accueil,
+ * mêmes pages, plus l'import de prospects qu'il est souvent seul à faire.
+ */
+const NAV_ADMIN: EntreeNav[] = [
+  ...NAV_DG,
+  { to: "/import", cle: "nav.import", icone: "import", requiert: "clients.importer" },
 ];
 
 /**
@@ -67,13 +77,18 @@ const NAV_COMMERCIAL: EntreeNav[] = [
 
 export function navDe(role: Role | undefined): EntreeNav[] {
   if (role === "DG") return NAV_DG;
+  if (role === "SUPER_ADMIN" || role === "ADMIN") return NAV_ADMIN;
   if (role === "COMMERCIAL") return NAV_COMMERCIAL;
   return NAV_STANDARD;
 }
 
-/** Le DG ouvre sur ses indicateurs, pas sur l'état de la base clients. */
+/**
+ * La direction ouvre sur ses indicateurs, pas sur l'état de la base clients.
+ * Les administrateurs en font partie : ils ont déjà la capacité
+ * stats.globales, et l'accueil hérité ne parlait que de newsletters.
+ */
 export function estVueDirection(role: Role | undefined) {
-  return role === "DG";
+  return role === "DG" || role === "SUPER_ADMIN" || role === "ADMIN";
 }
 
 /**
