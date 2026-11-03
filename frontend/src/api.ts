@@ -1622,3 +1622,46 @@ export async function supprimerCampagne(id: string) {
   const res = await authedFetch(`/api/campagnes/${id}`, { method: "DELETE" });
   if (!res.ok && res.status !== 204) throw new Error("Erreur lors de la suppression.");
 }
+
+/* ---------------------------------------------------------------- Assurance */
+
+export type BrancheAssurance = "AUTO" | "SANTE" | "PREVOYANCE" | "IARD" | "VIE" | "EPARGNE" | "VOYAGE";
+
+export type PoliceResume = {
+  id: string;
+  numeroPolice: string;
+  dateEffet: string;
+  clientNom: string;
+  compagnie: string;
+  branche: BrancheAssurance;
+  produit: string;
+  typeAffaire: "NOUVELLE" | "RENOUVELLEMENT" | "REMPLACEMENT";
+  primeAnnuelle: number;
+  /** Null quand ni la police ni le barème de la compagnie ne donnent de taux. */
+  commission: number | null;
+  tauxPct: number | null;
+  reglement: "A_JOUR" | "A_ENCAISSER" | "IMPAYE";
+  nbImpayees: number;
+};
+
+export type TableauAssurance = {
+  objectifAnnuel: { annee: number; cible: number | null; realise: number; partEcoulee: number };
+  classement: {
+    rang: number | null;
+    effectif: number;
+    rangPrimes: number | null;
+    rangNouvelles: number | null;
+    primesPremier: number;
+  };
+  portefeuille: { polices: number; clients: number; echeances30j: number; tauxRenouvellementPct: number | null };
+  commissions: { acquises: number; attendues: number; quittances: number; encaissees: number; impayees: number };
+  parMois: { mois: string; ca: number; benefice: number; nbVentes: number }[];
+  polices: PoliceResume[];
+  nbPolices: number;
+};
+
+export async function fetchMonTableau() {
+  const res = await authedFetch("/api/assurance/mon-tableau");
+  if (!res.ok) throw new Error("Erreur lors du chargement de votre tableau de bord.");
+  return res.json() as Promise<TableauAssurance>;
+}

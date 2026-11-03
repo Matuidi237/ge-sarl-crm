@@ -1,28 +1,38 @@
 import { useEffect, useState } from "react";
-import { TableauCommercial, fetchTableauCommercial } from "../api";
+import { TableauAssurance, fetchMonTableau, type PoliceResume } from "../api";
 import { useAuth } from "../AuthContext";
 import { useLangue } from "../i18n";
 import CarteIndicateur, { type Carte } from "../components/CarteIndicateur";
-import { CourbeEvolution } from "../components/Charts";
+import { CourbeEvolution, type VocabulaireCourbe } from "../components/Charts";
 import { IconAlert, IconAward, IconCoins, IconInbox, IconTrend, IconUsers } from "../components/Icons";
 
+const VOCABULAIRE: VocabulaireCourbe = {
+  legendeA: "as.legendePrimes",
+  legendeB: "as.legendeCommissions",
+  detail: "as.moisDetail",
+  vide: "as.moisVide",
+};
+
 /**
- * Tableau de bord d'un commercial.
+ * Tableau de bord d'un commercial de l'agence.
  *
- * Quatre indicateurs, tous tirés de ses propres ventes : ce qu'il a réalisé,
- * où il se situe dans l'équipe, l'état de son portefeuille et ce qu'il a
- * effectivement touché. Les mêmes cartes que la direction, parce qu'un chiffre
- * présenté différemment d'un écran à l'autre finit par être lu comme un autre
- * chiffre.
+ * La même disposition que celle d'un vendeur, mais pas les mêmes questions :
+ * un commercial d'agent général ne se juge pas à ce qu'il a signé ce mois-ci,
+ * il se juge aux primes qu'il fait émettre, au portefeuille qu'il conserve et
+ * aux commissions qui tombent réellement, c'est-à-dire aux quittances payées.
+ *
+ * Les cartes ne mènent encore nulle part : leurs pages de détail lisent les
+ * ventes du dépôt d'origine, et un lien vers des chiffres d'une autre nature
+ * serait pire que pas de lien.
  */
 export default function CommercialPage() {
-  const { t, nombre, montant, montantCompact, rang, date, dateHeure, locale } = useLangue();
+  const { t, nombre, montant, montantCompact, rang, date, locale } = useLangue();
   const { utilisateur } = useAuth();
-  const [donnees, setDonnees] = useState<TableauCommercial | null>(null);
+  const [donnees, setDonnees] = useState<TableauAssurance | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchTableauCommercial()
+    fetchMonTableau()
       .then(setDonnees)
       .catch((e) => setErreur(e.message));
   }, []);
@@ -61,33 +71,27 @@ export default function CommercialPage() {
     );
   }
 
-  const { chiffreAffaires: ca, classement, portefeuille, commissions, objectifAnnuel } = donnees;
+  const { objectifAnnuel, classement, portefeuille, commissions } = donnees;
   const rien = t("dg.aucuneDonnee");
-  const aVendu = ca.nbVentes > 0;
 
-  /* Part du premier : elle situe l'écart. « Troisième sur sept » ne dit pas si
-     la place se joue à deux ventes ou à une année de travail. */
-  const ecartPremier = classement.caPremier > 0 ? Math.round((ca.total / classement.caPremier) * 100) : null;
-
-  /* Taux de complétion de l'engagement annuel. Il remplace le chiffre
-     d'affaires brut en tête : savoir qu'on a réalisé 30 M n'apprend rien tant
-     qu'on ignore ce qui était attendu. */
   const completionPct =
     objectifAnnuel.cible && objectifAnnuel.cible > 0
       ? Math.round((objectifAnnuel.realise / objectifAnnuel.cible) * 100)
       : null;
 
+  /* Part du premier : « troisième sur cinq » ne dit pas si la place se joue
+     à une police ou à une année de travail. */
+  const ecartPremier =
+    classement.primesPremier > 0 ? Math.round((objectifAnnuel.realise / classement.primesPremier) * 100) : null;
+
   const cartes: Carte[] = [
     {
       label: t("co.objectifAnnuel", { annee: objectifAnnuel.annee }),
-      /* En gros, le montant à réaliser : c'est l'engagement, et c'est lui
-         qu'on retient. Le taux de complétion tient dans la jauge et la note,
-         où il complète le montant sans lui disputer la place. */
       valeur: objectifAnnuel.cible === null ? rien : montantCompact(objectifAnnuel.cible),
       note:
         completionPct === null
           ? t("co.objectifAbsent")
-          : t("co.objectifNote", {
+          : t("as.objectifNote", {
               pct: nombre(completionPct),
               realise: montantCompact(objectifAnnuel.realise),
               ecoule: objectifAnnuel.partEcoulee,
@@ -95,90 +99,90 @@ export default function CommercialPage() {
       icone: IconTrend,
       fg: "#0c8074",
       bg: "#e2f4f1",
-      /* La jauge porte le taux lui-même : c'est la seule des quatre cartes
-         dont la valeur EST une fraction, et la dessiner évite de la relire. */
       jauge:
         completionPct === null ? undefined : { valeurPct: Math.min(100, completionPct), couleur: "#0c8074" },
-      vers: "/tableau-de-bord/objectif",
-      libelleLien: t("co.voirDetail"),
     },
     {
       label: t("co.classement"),
-      /* Le rang est un ordinal, pas un nombre : « 3e » en français, « 3rd » en
-         anglais, ce que seul Intl.PluralRules sait produire correctement. */
       valeur: classement.rang ? t("co.rangSur", { rang: rang(classement.rang), n: classement.effectif }) : rien,
       valeurTexte: true,
       note:
-        classement.rangChiffreAffaires && classement.rangRentabilite
-          ? t("co.classementNote", {
-              ca: rang(classement.rangChiffreAffaires),
-              marge: rang(classement.rangRentabilite),
+        classement.rangPrimes && classement.rangNouvelles
+          ? t("as.classementNote", {
+              primes: rang(classement.rangPrimes),
+              nouvelles: rang(classement.rangNouvelles),
             })
-          : t("co.aucuneVente"),
+          : t("as.aucunePrime"),
       icone: IconAward,
       fg: "#9e6b06",
       bg: "#fcf2e0",
       /* Jauge sur l'écart au premier, pas sur le rang : un rang n'a pas de
          fraction, et le dessiner en proportion inventerait une distance. */
       jauge: ecartPremier !== null ? { valeurPct: Math.min(100, ecartPremier), couleur: "#c07a00" } : undefined,
-      vers: "/tableau-de-bord/classement",
-      libelleLien: t("co.voirDetail"),
     },
     {
-      label: t("co.portefeuille"),
-      valeur: portefeuille.total > 0 ? nombre(portefeuille.total) : rien,
+      label: t("as.portefeuille"),
+      valeur: portefeuille.polices > 0 ? nombre(portefeuille.polices) : rien,
       note:
-        portefeuille.total > 0
-          ? t("co.portefeuilleNote", {
-              n: nombre(portefeuille.avecVente),
-              pct: portefeuille.couverturePct ?? 0,
-            })
-          : t("co.portefeuilleVide"),
+        portefeuille.polices === 0
+          ? t("as.portefeuilleVide")
+          : portefeuille.tauxRenouvellementPct === null
+            ? t("as.portefeuilleNote", {
+                clients: nombre(portefeuille.clients),
+                echeances: nombre(portefeuille.echeances30j),
+              })
+            : t("as.portefeuilleNoteRenouv", {
+                clients: nombre(portefeuille.clients),
+                echeances: nombre(portefeuille.echeances30j),
+                pct: nombre(portefeuille.tauxRenouvellementPct),
+              }),
       icone: IconUsers,
       fg: "#5b4bc4",
       bg: "#eeebfa",
+      /* La jauge porte le taux de renouvellement : c'est ce qui dit si le
+         portefeuille se conserve ou se vide par le bas. */
       jauge:
-        portefeuille.couverturePct !== null
-          ? { valeurPct: portefeuille.couverturePct, couleur: "#7c4dcc" }
+        portefeuille.tauxRenouvellementPct !== null
+          ? { valeurPct: portefeuille.tauxRenouvellementPct, couleur: "#7c4dcc" }
           : undefined,
-      vers: "/tableau-de-bord/portefeuille",
-      libelleLien: t("co.voirDetail"),
     },
     {
       label: t("co.commissions"),
-      /* Reçu / attendu sur une seule ligne : c'est la comparaison qui
-         intéresse, et deux cartes séparées obligeraient à la faire de tête. */
-      valeur: `${montantCompact(commissions.recu).replace(" XAF", "")} / ${montantCompact(commissions.attendu)}`,
-      /* Corps réduit : « 600 k / 782 k XAF » est une comparaison, pas un
-         nombre unique, et au corps des montants elle passait à la ligne. */
+      /* Acquis / attendu sur une ligne : c'est la comparaison qui intéresse.
+         L'attendu est ce que rapporteraient toutes les quittances de l'année
+         si elles étaient payées. */
+      valeur: `${montantCompact(commissions.acquises).replace(" XAF", "")} / ${montantCompact(commissions.attendues)}`,
       valeurTexte: true,
-      /* Le taux maison est signalé comme tel : sans cette mention, un
-         commercial croirait son taux négocié et ne penserait pas à le
-         discuter. */
       note:
-        commissions.tauxNegociePct !== null
-          ? t("co.commissionsNote", {
-              n: nombre(commissions.nbVentesReglees),
-              total: nombre(ca.nbVentes),
-              /* Formaté et non interpolé brut : un taux de 6,5 s'écrivait
-                 « 6.5% » en français, avec le point décimal anglais. */
-              taux: nombre(commissions.tauxNegociePct),
+        commissions.impayees > 0
+          ? t("as.commissionsNoteImpayes", {
+              n: nombre(commissions.encaissees),
+              total: nombre(commissions.quittances),
+              i: nombre(commissions.impayees),
             })
-          : t("co.commissionsNoteDefaut", {
-              n: nombre(commissions.nbVentesReglees),
-              total: nombre(ca.nbVentes),
-              materiel: nombre(commissions.bareme.MATERIEL),
-              service: nombre(commissions.bareme.SERVICE),
+          : t("as.commissionsNote", {
+              n: nombre(commissions.encaissees),
+              total: nombre(commissions.quittances),
             }),
       icone: IconCoins,
-      fg: "#2a79ae",
-      bg: "#e8f3fb",
-      // La page Commissions EST le detail : en creer une seconde donnerait
-      // deux ecrans a maintenir pour la meme question.
-      vers: "/commissions",
-      libelleLien: t("co.voirReleve"),
+      fg: "#1e6597",
+      bg: "#e8f0f7",
     },
   ];
+
+  const pillReglement = (p: PoliceResume) => {
+    if (p.reglement === "IMPAYE") {
+      return (
+        <span className="pill pill-danger">
+          {p.nbImpayees > 1 ? t("as.impayees", { n: nombre(p.nbImpayees) }) : t("as.impayee")}
+        </span>
+      );
+    }
+    if (p.reglement === "A_ENCAISSER") return <span className="pill pill-warn">{t("as.aEncaisser")}</span>;
+    return <span className="pill pill-success">{t("as.aJour")}</span>;
+  };
+
+  const aDeLActivite = donnees.parMois.some((m) => m.ca > 0 || m.benefice > 0);
 
   return (
     <>
@@ -195,17 +199,16 @@ export default function CommercialPage() {
         ))}
       </div>
 
-      {/* Même évolution que celle du DG sur une fiche : il n'y a aucune raison
-          qu'un commercial découvre sa saisonnalité autrement que son directeur. */}
-      {aVendu && (
+      {aDeLActivite && (
         <div className="card">
           <div className="card-head">
             <div>
               <div className="card-title">{t("co.evolutionTitre")}</div>
-              <div className="card-sub">{t("co.evolutionSousTitre")}</div>
+              <div className="card-sub">{t("as.evolutionSousTitre")}</div>
             </div>
           </div>
           <CourbeEvolution
+            vocabulaire={VOCABULAIRE}
             points={donnees.parMois.map((p) => ({
               ...p,
               libelle: new Date(`${p.mois}-01T00:00:00`).toLocaleDateString(locale, { month: "short" }),
@@ -217,20 +220,20 @@ export default function CommercialPage() {
       <div className="table-card">
         <div className="card-head">
           <div>
-            <div className="card-title">{t("co.historiqueTitre")}</div>
-            <div className="card-sub">{t("co.historiqueSousTitre", { n: nombre(ca.nbVentes) })}</div>
+            <div className="card-title">{t("as.contratsTitre")}</div>
+            <div className="card-sub">{t("as.contratsSousTitre", { n: nombre(donnees.nbPolices) })}</div>
           </div>
-          {ca.derniereVente && <span className="tag">{date(ca.derniereVente)}</span>}
+          {donnees.polices[0] && <span className="tag">{date(donnees.polices[0].dateEffet)}</span>}
         </div>
 
-        {donnees.ventes.length === 0 ? (
+        {donnees.polices.length === 0 ? (
           <div className="empty">
             <div className="empty-icon">
               <IconInbox />
             </div>
-            <div className="empty-title">{t("co.historiqueVideTitre")}</div>
+            <div className="empty-title">{t("as.contratsVideTitre")}</div>
             <p className="empty-text" style={{ margin: 0 }}>
-              {t("co.historiqueVideTexte")}
+              {t("as.contratsVideTexte")}
             </p>
           </div>
         ) : (
@@ -238,58 +241,43 @@ export default function CommercialPage() {
             <table>
               <thead>
                 <tr>
-                  <th>{t("fc.colDate")}</th>
-                  <th>{t("fc.colClient")}</th>
-                  <th>{t("fc.colProduit")}</th>
-                  <th>{t("fc.colQuantite")}</th>
-                  <th>{t("fc.colMontant")}</th>
-                  <th>{t("fc.colBenefice")}</th>
-                  <th>{t("fc.colCommission")}</th>
+                  <th>{t("as.colEffet")}</th>
+                  <th>{t("as.colClient")}</th>
+                  <th>{t("as.colProduit")}</th>
+                  <th>{t("as.colCompagnie")}</th>
+                  <th>{t("as.colPrime")}</th>
+                  <th>{t("as.colCommission")}</th>
+                  <th>{t("as.colReglement")}</th>
                 </tr>
               </thead>
               <tbody>
-                {donnees.ventes.map((v) => (
-                  <tr key={v.id}>
-                    <td data-label={t("fc.colDate")}>{dateHeure(v.dateVente)}</td>
-                    <td className="td-strong td-main" data-label={t("fc.colClient")}>
-                      {v.clientNom}
+                {donnees.polices.map((p) => (
+                  <tr key={p.id}>
+                    <td data-label={t("as.colEffet")}>{date(p.dateEffet)}</td>
+                    <td className="td-strong td-main" data-label={t("as.colClient")}>
+                      {p.clientNom}
                     </td>
-                    <td data-label={t("fc.colProduit")}>{v.produit}</td>
-                    <td className="num" data-label={t("fc.colQuantite")}>
-                      {nombre(v.quantite)}
+                    <td data-label={t("as.colProduit")}>
+                      {p.produit}
+                      {/* La branche sous le produit : le libellé commercial
+                          varie d'une compagnie à l'autre, la branche non. */}
+                      <div className="muted-3" style={{ fontSize: 12.5 }}>
+                        {t(`branche.${p.branche}`)}
+                        {p.typeAffaire === "RENOUVELLEMENT" && ` · ${t("as.renouvellement")}`}
+                      </div>
                     </td>
-                    <td className="num" data-label={t("fc.colMontant")} title={montant(v.montant)}>
-                      {montantCompact(v.montant)}
+                    <td data-label={t("as.colCompagnie")}>{p.compagnie}</td>
+                    <td className="num" data-label={t("as.colPrime")} title={montant(p.primeAnnuelle)}>
+                      {montantCompact(p.primeAnnuelle)}
                     </td>
-                    {/* Null quand la direction n'a pas encore renseigné le
-                        prix d'achat : on l'écrit, plutôt que d'afficher un
-                        zéro qui se lirait comme une vente sans marge. */}
                     <td
-                      className={`num ${v.benefice === null ? "" : v.benefice >= 0 ? "num-positif" : "num-negatif"}`}
-                      data-label={t("fc.colBenefice")}
-                      title={v.benefice === null ? undefined : montant(v.benefice)}
+                      className="num"
+                      data-label={t("as.colCommission")}
+                      title={p.tauxPct === null ? undefined : `${nombre(p.tauxPct)} %`}
                     >
-                      {v.benefice === null ? (
-                        <span className="muted-3">{t("ve.aChiffrer")}</span>
-                      ) : (
-                        `${v.benefice >= 0 ? "+" : ""}${montantCompact(v.benefice)}`
-                      )}
+                      {p.commission === null ? <span className="muted-3">-</span> : montantCompact(p.commission)}
                     </td>
-                    {/* La colonne du DG porte le montant ; celle-ci y ajoute le
-                        règlement. C'est la question que se pose l'intéressé, et
-                        elle décompose l'écart affiché en haut de page. */}
-                    <td className="num" data-label={t("fc.colCommission")}>
-                      {v.commission === null ? (
-                        <span className="muted-3">-</span>
-                      ) : (
-                        <>
-                          <span title={montant(v.commission)}>{montantCompact(v.commission)}</span>
-                          <span className={`pill ${v.commissionVerseeLe ? "pill-success" : "pill-warn"} pill-reglement`}>
-                            {v.commissionVerseeLe ? t("co.versee", { date: date(v.commissionVerseeLe) }) : t("co.due")}
-                          </span>
-                        </>
-                      )}
-                    </td>
+                    <td data-label={t("as.colReglement")}>{pillReglement(p)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -7,7 +7,7 @@
   /* Barre latérale : pas foncé de la rampe de marque (même valeur que --viz-2,
      donc accordée aux graphiques). Le bleu vif du logo saturait trop sur toute
      la hauteur. Le blanc y ressort à 6.97:1, largement au-dessus du seuil AA. */
-  --sidebar-bg: #155e8e;
+  --sidebar-bg: #1e6597; /* bleu du logo GE SARL, le blanc y ressort à 6.2:1 */
   --sidebar-line: rgba(255, 255, 255, 0.18);
   --sidebar-ink: rgba(255, 255, 255, 0.78);
 
@@ -170,10 +170,12 @@ button {
   padding: 0 8px;
 }
 
-/* Logo officiel, version blanche sur la barre latérale bleue */
+/* Logo officiel, version blanche sur la barre latérale bleue. Plus étroit que
+   celui d'origine : le logo GE SARL est presque carré, et à pleine largeur il
+   repousserait le menu d'un tiers de la hauteur. */
 .brand-logo {
   display: block;
-  width: 152px;
+  width: 96px;
   max-width: 100%;
   height: auto;
 }
@@ -260,16 +262,17 @@ button {
   color: #fff;
 }
 
-/* Élément actif inversé : pastille blanche sur le bleu, texte bleu foncé (6.4:1). */
+/* Élément actif inversé : pastille blanche sur le bleu, texte au bleu nuit du
+   logo (14:1). */
 .nav-item.active {
   background: #fff;
-  color: var(--brand-700);
+  color: var(--brand-nuit);
   font-weight: 650;
 }
 
 .nav-item.active:hover {
   background: #fff;
-  color: var(--brand-700);
+  color: var(--brand-nuit);
 }
 
 .nav-section {

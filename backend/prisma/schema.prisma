@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // « native » couvre la machine de développement (Windows), la cible Debian
   // couvre l'image de production. Sans elle, le moteur généré peut ne pas
   // correspondre à celui attendu dans le conteneur.
@@ -12,37 +12,44 @@ datasource db {
 }
 
 model Client {
-  id                String   @id @default(uuid())
-  nom               String
-  adressePhysique   String?
-  ville             String?
-  pays              String?
-  siteWeb           String?
-  emailContact      String?
-  nomContactInterne String?
-  commercialEnCharge String?
-  secteurActivite   String?
-  chiffreAffaires   Decimal? @db.Decimal(18, 2)
-  telephone         String?
-  notes             String?
-  champsPersonnalises Json?  @default("{}")
-  importJob         ImportJob? @relation(fields: [importJobId], references: [id], onDelete: Cascade)
-  importJobId       String?
+  id                  String     @id @default(uuid())
+  nom                 String
+  adressePhysique     String?
+  ville               String?
+  pays                String?
+  siteWeb             String?
+  emailContact        String?
+  nomContactInterne   String?
+  commercialEnCharge  String?
+  secteurActivite     String?
+  chiffreAffaires     Decimal?   @db.Decimal(18, 2)
+  telephone           String?
+  notes               String?
+  champsPersonnalises Json?      @default("{}")
+  importJob           ImportJob? @relation(fields: [importJobId], references: [id], onDelete: Cascade)
+  importJobId         String?
 
   /// Compte qui a créé la fiche. Un commercial voit toujours ses propres
   /// prospects. Le champ texte « commercialEnCharge » reste, lui, purement
   /// informatif : il provient des fichiers importés.
-  proprietaire   Utilisateur? @relation("Proprietaire", fields: [proprietaireId], references: [id], onDelete: SetNull)
+  proprietaire   Utilisateur?  @relation("Proprietaire", fields: [proprietaireId], references: [id], onDelete: SetNull)
   proprietaireId String?
   acces          AccesClient[]
   ventes         Vente[]
   projets        Projet[]
   saisiesTemps   SaisieTemps[]
-  /// « notes » est déjà pris par le champ texte libre de la fiche, plus haut.
-  pensesBetes    Note[]
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  // Un seul modèle pour le prospect et le client : la même personne traverse
+  // les deux états, et scinder la table obligerait à recopier la fiche au
+  // moment précis où l'on veut garder son historique.
+  typePersonne TypePersonne @default(PARTICULIER)
+  statut       StatutFiche  @default(A_CONTACTER)
+  polices      Police[]
+  /// « notes » est déjà pris par le champ texte libre de la fiche, plus haut.
+  pensesBetes  Note[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([proprietaireId])
   @@index([pays])
@@ -53,16 +60,16 @@ model Client {
 }
 
 model ImportJob {
-  id           String   @id @default(uuid())
-  nomFichier   String
-  formatSource String
-  nbLignesTotal Int
+  id                String   @id @default(uuid())
+  nomFichier        String
+  formatSource      String
+  nbLignesTotal     Int
   nbLignesImportees Int
-  nbErreurs    Int
-  mappingUtilise Json
-  erreurs      Json?
-  createdAt    DateTime @default(now())
-  clients      Client[]
+  nbErreurs         Int
+  mappingUtilise    Json
+  erreurs           Json?
+  createdAt         DateTime @default(now())
+  clients           Client[]
 }
 
 /// Hiérarchie de privilèges. Les capacités réelles de chaque rôle sont
@@ -82,8 +89,8 @@ enum RoleUtilisateur {
 }
 
 model Utilisateur {
-  id             String          @id @default(uuid())
-  identifiant    String          @unique
+  id             String  @id @default(uuid())
+  identifiant    String  @unique
   nomComplet     String
   email          String?
   fonction       String?
@@ -111,12 +118,12 @@ model Utilisateur {
   /// La colonne reste nullable à dessein : « rien de négocié » et « 3 %
   /// explicitement accordés » ne se confondent pas, et une valeur copiée dans
   /// chaque ligne figerait le barème au jour de la création du compte.
-  tauxCommissionPct Decimal? @db.Decimal(5, 2)
-  role           RoleUtilisateur @default(COMMERCIAL)
-  actif          Boolean         @default(true)
-  dernierAcces   DateTime?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  tauxCommissionPct Decimal?        @db.Decimal(5, 2)
+  role              RoleUtilisateur @default(COMMERCIAL)
+  actif             Boolean         @default(true)
+  dernierAcces      DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   /// Responsable hiérarchique : un responsable commercial n'administre que
   /// les comptes qui lui sont rattachés.
@@ -133,15 +140,16 @@ model Utilisateur {
   ///
   /// Facultatif dans les deux sens : un prestataire ou un compte technique n'a
   /// pas de dossier RH, et la plupart des employés n'ont pas de compte.
-  employe         Employe?
+  employe Employe?
 
-  saisiesTemps    SaisieTemps[]        @relation("Temps")
-  notesPosees     Note[]               @relation("Notes")
-  objectifs       ObjectifCommercial[] @relation("Objectifs")
+  saisiesTemps SaisieTemps[]        @relation("Temps")
+  notesPosees  Note[]               @relation("Notes")
+  objectifs    ObjectifCommercial[] @relation("Objectifs")
 
   clientsPossedes Client[]      @relation("Proprietaire")
   accesAccordes   AccesClient[] @relation("Beneficiaire")
   ventes          Vente[]       @relation("Vendeur")
+  polices         Police[]      @relation("Apporteur")
   projets         Projet[]      @relation("ChefDeProjet")
 
   @@index([responsableId])
@@ -156,7 +164,7 @@ model Utilisateur {
 ///
 /// Les prix sont unitaires et hors taxes, en XAF, comme le reste de l'outil.
 model Vente {
-  id        String @id @default(uuid())
+  id String @id @default(uuid())
 
   /// La fiche client peut disparaître (suppression d'un fichier importé)
   /// sans que la vente ne s'efface : le nom en garde la trace lisible.
@@ -174,7 +182,7 @@ model Vente {
   /// d'EasyTech n'est pas encore modélisé, et l'imposer maintenant figerait
   /// des choix qui n'ont pas été arbitrés.
   produit  String
-  quantite Int @default(1)
+  quantite Int    @default(1)
 
   /// Matériel ou service. C'est cette nature, et elle seule, qui fixe le taux
   /// de commission (voir src/lib/commissions.ts) : le libellé du produit reste
@@ -306,19 +314,19 @@ enum NewsletterFormat {
 }
 
 model Newsletter {
-  id              String   @id @default(uuid())
+  id              String            @id @default(uuid())
   titre           String
   sujet           String
-  format          NewsletterFormat @default(TEXTE)
+  format          NewsletterFormat  @default(TEXTE)
   contenu         String
   secteursCibles  String[]
-  statut          NewsletterStatut @default(BROUILLON)
+  statut          NewsletterStatut  @default(BROUILLON)
   nbDestinataires Int?
   nbEnvoyes       Int?
   nbEchecs        Int?
   envoyeeLe       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
   envois          NewsletterEnvoi[]
 }
 
@@ -328,15 +336,15 @@ enum EnvoiStatut {
 }
 
 model NewsletterEnvoi {
-  id            String   @id @default(uuid())
-  newsletter    Newsletter @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
-  newsletterId  String
-  clientId      String
-  clientNom     String
-  email         String
-  statut        EnvoiStatut
-  erreur        String?
-  createdAt     DateTime @default(now())
+  id           String      @id @default(uuid())
+  newsletter   Newsletter  @relation(fields: [newsletterId], references: [id], onDelete: Cascade)
+  newsletterId String
+  clientId     String
+  clientNom    String
+  email        String
+  statut       EnvoiStatut
+  erreur       String?
+  createdAt    DateTime    @default(now())
 
   @@index([newsletterId])
 }
@@ -373,8 +381,8 @@ model Projet {
   vente   Vente?  @relation(fields: [venteId], references: [id], onDelete: SetNull)
   venteId String?
 
-  chefDeProjet   Utilisateur? @relation("ChefDeProjet", fields: [chefDeProjetId], references: [id], onDelete: SetNull)
-  chefDeProjetId String?
+  chefDeProjet    Utilisateur? @relation("ChefDeProjet", fields: [chefDeProjetId], references: [id], onDelete: SetNull)
+  chefDeProjetId  String?
   chefDeProjetNom String
 
   statut StatutProjet @default(EN_PREPARATION)
@@ -553,15 +561,15 @@ model ObjectifCommercial {
   /// souvient du contexte de l'engagement.
   description String?
 
-  periode   PeriodeObjectif
+  periode PeriodeObjectif
   /// Début de la fenêtre, à minuit heure locale. La fin se déduit de la
   /// période : la stocker ouvrirait la porte à une incohérence entre les deux.
-  debut DateTime @db.Date
+  debut   DateTime        @db.Date
 
   /// Chiffre d'affaires visé, en XAF. Null quand l'objectif ne porte que sur
   /// l'activité (nombre de rendez-vous, par exemple).
-  cibleCaXAF Decimal? @db.Decimal(18, 2)
-  cibleVentes Int?
+  cibleCaXAF      Decimal? @db.Decimal(18, 2)
+  cibleVentes     Int?
   cibleRendezVous Int?
 
   /// Vrai quand l'objectif vient de l'encadrement. L'intéressé ne peut alors
@@ -570,7 +578,7 @@ model ObjectifCommercial {
   fixeParEncadrement Boolean @default(false)
   /// Trace de l'auteur, sans clé étrangère : un compte fermé ne doit pas
   /// effacer l'origine d'un engagement.
-  definiParNom String
+  definiParNom       String
 
   note String?
 
@@ -662,7 +670,7 @@ model Partenaire {
   paliers      String[]
   niveauActuel String
   /// Date d'obtention du palier courant, quand elle est connue.
-  depuis DateTime?
+  depuis       DateTime?
 
   /// Mots-clés des produits vendus sous ce partenariat.
   ///
@@ -793,7 +801,6 @@ model CampagneDestinataire {
   @@index([campagneId])
 }
 
-
 // ==========================================================================
 // Ressources humaines
 // ==========================================================================
@@ -857,13 +864,13 @@ model Employe {
   /// l'une dit qui voit le portefeuille de qui, l'autre qui valide le congé de
   /// qui. Les confondre se paie le jour où un commercial change de responsable
   /// commercial sans changer de manager.
-  manager   Employe?  @relation("Hierarchie", fields: [managerId], references: [id], onDelete: SetNull)
-  managerId String?
+  manager     Employe?  @relation("Hierarchie", fields: [managerId], references: [id], onDelete: SetNull)
+  managerId   String?
   subordonnes Employe[] @relation("Hierarchie")
 
-  dateEmbauche DateTime  @db.Date
+  dateEmbauche DateTime      @db.Date
   statut       StatutEmploye @default(ACTIF)
-  dateSortie   DateTime? @db.Date
+  dateSortie   DateTime?     @db.Date
   motifSortie  String?
 
   /// Compte de connexion, s'il en a un. Un à un : deux dossiers ne peuvent pas
@@ -871,8 +878,8 @@ model Employe {
   utilisateur   Utilisateur? @relation(fields: [utilisateurId], references: [id], onDelete: SetNull)
   utilisateurId String?      @unique
 
-  contrats  Contrat[]
-  absences  DemandeAbsence[]  @relation("Demandeur")
+  contrats    Contrat[]
+  absences    DemandeAbsence[]  @relation("Demandeur")
   ajustements AjustementConge[]
 
   estDemo Boolean @default(false)
@@ -907,16 +914,16 @@ model Contrat {
   employe   Employe @relation(fields: [employeId], references: [id], onDelete: Cascade)
   employeId String
 
-  type      TypeContrat
-  intitule  String?
-  debut     DateTime  @db.Date
+  type     TypeContrat
+  intitule String?
+  debut    DateTime    @db.Date
 
   /// Nul pour un CDI. Rempli, il déclenche l'alerte d'échéance : un CDD qui
   /// se poursuit sans renouvellement écrit se requalifie.
-  fin       DateTime? @db.Date
+  fin DateTime? @db.Date
 
   /// Fin de la période d'essai, quand il y en a une.
-  finEssai  DateTime? @db.Date
+  finEssai DateTime? @db.Date
 
   /// Salaire brut mensuel.
   ///
@@ -990,8 +997,8 @@ model DemandeAbsence {
   employeId String
 
   type  TypeAbsence
-  debut DateTime @db.Date
-  fin   DateTime @db.Date
+  debut DateTime    @db.Date
+  fin   DateTime    @db.Date
 
   /// Jours ouvrés décomptés, calculés à la soumission et figés ensuite.
   ///
@@ -1044,7 +1051,7 @@ model AjustementConge {
   /// Positif pour un report ou un octroi, négatif pour une reprise.
   jours Decimal @db.Decimal(5, 1)
 
-  motif      String
+  motif       String
   saisiParNom String
 
   estDemo Boolean @default(false)
@@ -1053,4 +1060,168 @@ model AjustementConge {
 
   @@index([employeId, annee])
   @@index([estDemo])
+}
+
+// Assurance : compagnies, polices, quittances
+// Voir docs/CONCEPTION-ASSURANCE.md. Le modèle sépare la police, qui est un
+// engagement, de la quittance, qui est un encaissement : la commission d'un
+// agent général s'acquiert à l'encaissement, pas à la signature.
+
+enum TypePersonne {
+  PARTICULIER
+  ENTREPRISE
+}
+
+// Pipeline de prospection. « Prospect » avant le premier contrat, « client »
+// après : le vocabulaire de l'interface suit ce statut.
+enum StatutFiche {
+  A_CONTACTER
+  CONTACTE
+  RENDEZ_VOUS
+  DEVIS_REMIS
+  EN_NEGOCIATION
+  CLIENT
+  PERDU
+  SANS_SUITE
+}
+
+// Liste fermée parce qu'elle commande le taux de commission. Le libellé
+// commercial du produit, lui, reste du texte libre sur la police.
+enum BrancheAssurance {
+  AUTO
+  SANTE
+  PREVOYANCE
+  IARD
+  VIE
+  EPARGNE
+  VOYAGE
+}
+
+enum TypeAffaire {
+  NOUVELLE
+  RENOUVELLEMENT
+  REMPLACEMENT
+}
+
+enum Fractionnement {
+  ANNUEL
+  SEMESTRIEL
+  TRIMESTRIEL
+  MENSUEL
+}
+
+enum StatutPolice {
+  EN_ATTENTE
+  EN_COURS
+  SUSPENDU
+  RESILIE
+  EXPIRE
+}
+
+enum StatutQuittance {
+  A_ENCAISSER
+  ENCAISSEE
+  IMPAYEE
+  ANNULEE
+}
+
+model Compagnie {
+  id            String  @id @default(uuid())
+  nom           String  @unique
+  interlocuteur String?
+  telephone     String?
+  email         String?
+  notes         String?
+  estDemo       Boolean @default(false)
+
+  baremes BaremeCommission[]
+  polices Police[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Le taux dépend de la branche et du type d'affaire : un renouvellement est
+// presque toujours moins rémunéré qu'une affaire nouvelle. En base et non en
+// constante, parce qu'il change à chaque traité signé avec la compagnie.
+model BaremeCommission {
+  id          String           @id @default(uuid())
+  compagnie   Compagnie        @relation(fields: [compagnieId], references: [id], onDelete: Cascade)
+  compagnieId String
+  branche     BrancheAssurance
+  typeAffaire TypeAffaire
+  tauxPct     Decimal          @db.Decimal(5, 2)
+
+  @@unique([compagnieId, branche, typeAffaire])
+}
+
+// « Police » et non « Contrat » : ce nom est déjà pris par le contrat de
+// travail du module RH.
+model Police {
+  id           String @id @default(uuid())
+  numeroPolice String
+
+  client      Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  clientId    String
+  compagnie   Compagnie    @relation(fields: [compagnieId], references: [id], onDelete: Restrict)
+  compagnieId String
+  apporteur   Utilisateur? @relation("Apporteur", fields: [apporteurId], references: [id], onDelete: SetNull)
+  apporteurId String?
+
+  branche     BrancheAssurance
+  produit     String
+  typeAffaire TypeAffaire      @default(NOUVELLE)
+
+  dateEffet          DateTime @db.Date
+  dateEcheance       DateTime @db.Date
+  taciteReconduction Boolean  @default(true)
+
+  primeAnnuelle  Decimal        @db.Decimal(18, 2)
+  fractionnement Fractionnement @default(ANNUEL)
+
+  // Null : le barème de la compagnie s'applique. Renseigné pour un taux
+  // négocié, qui l'emporte alors sur le barème.
+  tauxCommissionPct Decimal? @db.Decimal(5, 2)
+
+  statut           StatutPolice @default(EN_COURS)
+  dateResiliation  DateTime?    @db.Date
+  motifResiliation String?
+
+  // La chaîne de renouvellement : sans elle, un renouvellement ressemble à
+  // une affaire nouvelle et le taux de renouvellement est incalculable.
+  policePrecedente   Police? @relation("Renouvellement", fields: [policePrecedenteId], references: [id], onDelete: SetNull)
+  policePrecedenteId String? @unique
+  policeSuivante     Police? @relation("Renouvellement")
+
+  quittances Quittance[]
+  estDemo    Boolean     @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([compagnieId, numeroPolice])
+  @@index([apporteurId])
+  @@index([clientId])
+  @@index([dateEffet])
+  @@index([dateEcheance])
+  @@index([estDemo])
+}
+
+model Quittance {
+  id               String          @id @default(uuid())
+  police           Police          @relation(fields: [policeId], references: [id], onDelete: Cascade)
+  policeId         String
+  periodeDebut     DateTime        @db.Date
+  periodeFin       DateTime        @db.Date
+  montant          Decimal         @db.Decimal(18, 2)
+  dateEcheance     DateTime        @db.Date
+  statut           StatutQuittance @default(A_ENCAISSER)
+  dateEncaissement DateTime?       @db.Date
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([policeId])
+  @@index([statut])
+  @@index([dateEcheance])
 }

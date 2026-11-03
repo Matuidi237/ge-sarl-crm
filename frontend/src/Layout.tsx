@@ -8,6 +8,7 @@ import SelecteurLangue from "./components/SelecteurLangue";
 import {
   IconArrowLeft,
   IconCalendar,
+  IconFile,
   IconChevronLeft,
   IconCoins,
   IconTag,
@@ -39,6 +40,7 @@ const ICONES: Record<string, typeof IconDashboard> = {
   tag: IconTag,
   coins: IconCoins,
   calendar: IconCalendar,
+  file: IconFile,
 };
 
 function initiales(nom: string) {
@@ -163,7 +165,7 @@ export default function Layout() {
 
       <aside className={`sidebar${navOpen ? " open" : ""}${replie ? " replie" : ""}`}>
         <div className="sidebar-brand">
-          <img src="/brand/easytech-logo-blanc.png" alt="EasyTech Group" className="brand-logo" />
+          <img src="/brand/ge-sarl-logo-blanc.png" alt="GE SARL" className="brand-logo" />
           <button className="sidebar-close" onClick={() => setNavOpen(false)} aria-label={t("topbar.fermerMenu")}>
             <IconClose size={18} />
           </button>

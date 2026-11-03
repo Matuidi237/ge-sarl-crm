@@ -196,6 +196,14 @@ export default function App() {
               }
             />
             <Route
+              path="/rapports"
+              element={
+                <RouteCommerciale>
+                  <EnConstruction titre="nav.rapports" sousTitre="rapports.sousTitre" />
+                </RouteCommerciale>
+              }
+            />
+            <Route
               path="/planning"
               element={
                 <RouteCommerciale>

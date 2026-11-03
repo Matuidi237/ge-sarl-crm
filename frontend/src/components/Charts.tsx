@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Repartition } from "../api";
-import { useLangue } from "../i18n";
+import { useLangue, type CleTraduction } from "../i18n";
 
 /* Rampe ordinale centrée sur le bleu du logo, définie une seule fois dans styles.css
    (tokens --viz-*). Le plus grand segment porte le pas le plus sombre ; la traîne
@@ -34,11 +34,30 @@ export function foldTail(data: Repartition[], keep: number, libelleReste = "Autr
 
 export type PointCourbe = { mois: string; libelle: string; ca: number; benefice: number; nbVentes: number };
 
+/**
+ * Ce que désignent les deux séries. Par défaut chiffre d'affaires et bénéfice ;
+ * en assurance, primes émises et commissions acquises. Le tracé est le même,
+ * seuls les mots changent, et ils sont fournis par l'appelant.
+ */
+export type VocabulaireCourbe = {
+  legendeA: CleTraduction;
+  legendeB: CleTraduction;
+  detail: CleTraduction;
+  vide: CleTraduction;
+};
+
+const VOCABULAIRE_VENTES: VocabulaireCourbe = {
+  legendeA: "dg.legendeCa",
+  legendeB: "dg.legendeBenefice",
+  detail: "dg.moisDetail",
+  vide: "dg.moisSansVente",
+};
+
 /* Deux séries, deux teintes de familles différentes et non deux pas du même
    bleu : les courbes se croisent et se superposent, là où des barres restent
    côte à côte. Paire vérifiée au validateur de palette, écart 27,5 en vision
    normale et 23,2 en protanopie. La couleur suit la série, jamais sa valeur. */
-const SERIE_CA = "#1f86c8";
+const SERIE_CA = "#1e6597";
 const SERIE_BENEFICE = "#c07a00";
 
 /** Géométrie du tracé, en unités du viewBox. */
@@ -55,7 +74,13 @@ const G = { w: 720, h: 230, hautMarge: 16, basMarge: 26, gaucheMarge: 8, droiteM
  * Le repère suit le curseur et désigne un mois entier : viser un point de
  * quelques pixels sur une courbe est un exercice d'adresse, pas de lecture.
  */
-export function CourbeEvolution({ points }: { points: PointCourbe[] }) {
+export function CourbeEvolution({
+  points,
+  vocabulaire = VOCABULAIRE_VENTES,
+}: {
+  points: PointCourbe[];
+  vocabulaire?: VocabulaireCourbe;
+}) {
   const { t, nombre } = useLangue();
   const [actif, setActif] = useState<number | null>(null);
   const [tip, setTip] = useState<Tip>(null);
@@ -146,8 +171,8 @@ export function CourbeEvolution({ points }: { points: PointCourbe[] }) {
       title: p.libelle,
       detail:
         p.nbVentes === 0
-          ? t("dg.moisSansVente")
-          : t("dg.moisDetail", { ca: nombre(p.ca), benefice: nombre(p.benefice), n: nombre(p.nbVentes) }),
+          ? t(vocabulaire.vide)
+          : t(vocabulaire.detail, { ca: nombre(p.ca), benefice: nombre(p.benefice), n: nombre(p.nbVentes) }),
     });
   }
 
@@ -215,11 +240,11 @@ export function CourbeEvolution({ points }: { points: PointCourbe[] }) {
       <div className="legend legend-inline">
         <div className="legend-item">
           <span className="legend-dot" style={{ background: SERIE_CA }} />
-          <span className="legend-name">{t("dg.legendeCa")}</span>
+          <span className="legend-name">{t(vocabulaire.legendeA)}</span>
         </div>
         <div className="legend-item">
           <span className="legend-dot" style={{ background: SERIE_BENEFICE }} />
-          <span className="legend-name">{t("dg.legendeBenefice")}</span>
+          <span className="legend-name">{t(vocabulaire.legendeB)}</span>
         </div>
       </div>
 

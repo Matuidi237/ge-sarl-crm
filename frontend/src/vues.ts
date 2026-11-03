@@ -49,7 +49,9 @@ const NAV_DG: EntreeNav[] = [
 /**
  * Vue du commercial : trois onglets, pas davantage.
  *
- * Ses chiffres, ses clients, son temps. Ventes et commissions restent des
+ * Ses chiffres, ses clients, ses rapports d'activité. Le calendrier hérité a
+ * cédé sa place aux rapports, qui sont ce que la direction de GE SARL attend
+ * de ses commerciaux. Ventes et commissions restent des
  * écrans à part entière, atteints depuis les indicateurs du tableau de bord
  * plutôt que depuis le menu : une barre latérale qui liste tout ce que
  * l'application sait faire cesse d'indiquer par où commencer.
@@ -61,7 +63,7 @@ const NAV_DG: EntreeNav[] = [
 const NAV_COMMERCIAL: EntreeNav[] = [
   { to: "/", cle: "nav.dashboard", icone: "dashboard", end: true },
   { to: "/clients", cle: "nav.portefeuille", icone: "users" },
-  { to: "/planning", cle: "nav.calendrier", icone: "calendar" },
+  { to: "/rapports", cle: "nav.rapports", icone: "file" },
 ];
 
 export function navDe(role: Role | undefined): EntreeNav[] {
