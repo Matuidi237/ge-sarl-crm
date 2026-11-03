@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
@@ -13,9 +13,9 @@
     "demo:dg": "node scripts/demo-direction.mjs",
     "demo:dg:supprimer": "node scripts/demo-direction.mjs --supprimer",
     "demo:dg:etat": "node scripts/demo-direction.mjs --etat",
-    "demo:agence": "node scripts/demo-assurance.mjs",
-    "demo:agence:supprimer": "node scripts/demo-assurance.mjs --supprimer",
-    "demo:agence:etat": "node scripts/demo-assurance.mjs --etat"
+    "demo:agence": "node --env-file-if-exists=.env scripts/demo-assurance.mjs",
+    "demo:agence:supprimer": "node --env-file-if-exists=.env scripts/demo-assurance.mjs --supprimer",
+    "demo:agence:etat": "node --env-file-if-exists=.env scripts/demo-assurance.mjs --etat"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
