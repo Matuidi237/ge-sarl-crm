@@ -54,7 +54,7 @@ const COMMERCIAUX = [
 
 /* La direction de l'agence, avec les droits du rôle DG. Nom fictif comme les
    autres comptes de démonstration. */
-const DIRECTRICE = { identifiant: "demo-directrice", nomComplet: "Henriette NKOA", fonction: "Directrice générale" };
+const DIRECTRICE = { identifiant: "demo-directrice", nomComplet: "Estelle YOUMBI", fonction: "Directrice générale" };
 const IDENTIFIANTS = [DIRECTRICE.identifiant, ...COMMERCIAUX.map((c) => c.identifiant)];
 
 /** Taux d'exemple, affaire nouvelle puis renouvellement. */
