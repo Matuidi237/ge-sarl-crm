@@ -7530,3 +7530,387 @@ td.col-actions {
     opacity: 1;
   }
 }
+
+/* ==========================================================================
+   Rapports journaliers (préfixe rj-)
+   Liste des jours à gauche, fiche du jour à droite. La fiche se remplit en
+   fin de journée, souvent sur téléphone : compteurs à gros boutons, montants
+   groupés par milliers, et aucune action d'enregistrement à penser.
+   ========================================================================== */
+
+.rj-grille {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.rj-jours {
+  padding: 16px;
+  position: sticky;
+  top: 18px;
+}
+
+.rj-mois {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.rj-mois-titre {
+  font-size: 14.5px;
+  font-weight: 650;
+  text-transform: capitalize;
+}
+
+.rj-mois-nav {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-2);
+}
+
+.rj-mois-nav:not(:disabled):hover {
+  border-color: var(--border-2);
+  color: var(--ink);
+}
+
+.rj-mois-nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rj-bilan {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.rj-bilan-chiffre {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.rj-bilan-chiffre span {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.rj-bilan-libelle {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+
+.rj-bilan-barre {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--viz-track);
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.rj-bilan-barre div {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--success);
+}
+
+.rj-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: calc(100vh - 330px);
+  overflow-y: auto;
+}
+
+.rj-jour {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  text-align: left;
+  color: var(--ink);
+}
+
+.rj-jour:hover {
+  background: var(--surface-2);
+}
+
+.rj-jour.actif {
+  background: var(--brand-100);
+}
+
+.rj-jour-texte {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rj-jour-date {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+/* Majuscule à l'initiale seulement : « capitalize » écrirait « Mar. 3 Nov. »,
+   ce qui n'est pas du français. */
+.rj-jour-date::first-letter {
+  text-transform: uppercase;
+}
+
+.rj-jour-resume {
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rj-fiche {
+  padding: 26px 28px;
+}
+
+.rj-fiche-tete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rj-fiche-titre {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.rj-fiche-titre::first-letter {
+  text-transform: uppercase;
+}
+
+.rj-fiche-etat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+.rj-fiche-etat svg {
+  color: var(--success);
+}
+
+.rj-fiche-etat.erreur {
+  color: var(--danger);
+}
+
+.rj-veille {
+  margin-top: 18px;
+  border-left: 3px solid var(--brand);
+  background: var(--brand-100);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 10px 14px;
+}
+
+.rj-veille-titre {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--brand-700);
+}
+
+.rj-veille p {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.rj-section-titre {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 24px 0 12px;
+}
+
+.rj-compteurs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rj-compteur {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px;
+  background: var(--surface-2);
+}
+
+.rj-compteur label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--ink-2);
+  margin-bottom: 8px;
+}
+
+.rj-compteur-saisie {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rj-compteur-saisie button {
+  flex: 0 0 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--brand-700);
+}
+
+.rj-compteur-saisie button:not(:disabled):hover {
+  background: var(--brand-100);
+  border-color: var(--brand-200);
+}
+
+.rj-compteur-saisie button:disabled {
+  color: var(--ink-3);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rj-compteur-saisie input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  border: none;
+  background: none;
+  text-align: center;
+  font-family: var(--font);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.rj-compteur-saisie input:focus {
+  outline: none;
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px var(--brand-200);
+}
+
+.rj-montants {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rj-montant {
+  position: relative;
+}
+
+.rj-montant input {
+  padding-right: 48px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.rj-montant span {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.rj-texte-fige {
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: 13.5px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.rj-pied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.rj-pied-texte {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.rj-pied-actions {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 1024px) {
+  .rj-grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rj-jours {
+    position: static;
+  }
+
+  .rj-liste {
+    max-height: 230px;
+  }
+}
+
+@media (max-width: 760px) {
+  .rj-fiche {
+    padding: 18px 16px;
+  }
+
+  .rj-compteurs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rj-montants {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rj-pied {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rj-pied-actions .btn {
+    flex: 1;
+  }
+}

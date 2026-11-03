@@ -1665,3 +1665,43 @@ export async function fetchMonTableau() {
   if (!res.ok) throw new Error("Erreur lors du chargement de votre tableau de bord.");
   return res.json() as Promise<TableauAssurance>;
 }
+
+/* ------------------------------------------------------ Rapports journaliers */
+
+export type ValeursRapport = {
+  appels: number;
+  visites: number;
+  rendezVous: number;
+  nouveauxProspects: number;
+  devisRemis: number;
+  contratsSignes: number;
+  primesSouscrites: number;
+  encaissements: number;
+  faitsMarquants: string;
+  difficultes: string;
+  programmeLendemain: string;
+};
+
+export type RapportJournalier = ValeursRapport & {
+  /** « 2026-11-03 » : un jour calendaire, sans heure ni fuseau. */
+  jour: string;
+  statut: "BROUILLON" | "ENVOYE";
+  envoyeLe: string | null;
+  modifieLe: string;
+};
+
+export async function fetchRapportsDuMois(mois: string) {
+  const res = await authedFetch(`/api/rapports/mois/${mois}`);
+  if (!res.ok) throw new Error("Erreur lors du chargement de vos rapports.");
+  return res.json() as Promise<{ aujourdhui: string; rapports: RapportJournalier[] }>;
+}
+
+export async function enregistrerRapport(jour: string, valeurs: ValeursRapport, envoyer = false) {
+  const res = await authedFetch(`/api/rapports/${jour}${envoyer ? "/envoyer" : ""}`, {
+    method: envoyer ? "POST" : "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(valeurs),
+  });
+  if (!res.ok) throw new Error((await res.json()).error ?? "Erreur lors de l'enregistrement du rapport.");
+  return res.json() as Promise<RapportJournalier>;
+}

@@ -12,6 +12,7 @@ import { directionRouter } from "./routes/direction.js";
 import { campagnesRouter } from "./routes/campagnes.js";
 import { commercialRouter } from "./routes/commercial.js";
 import { assuranceRouter } from "./routes/assurance.js";
+import { rapportsRouter } from "./routes/rapports.js";
 import { planningRouter } from "./routes/planning.js";
 import { requireAuth, requirePermission } from "./lib/auth.js";
 
@@ -53,6 +54,7 @@ app.use("/api/campagnes", requireAuth, requirePermission("newsletters.voir"), ca
    le droit de voir les chiffres de TOUS pour consulter les siens. */
 app.use("/api/commercial", requireAuth, commercialRouter);
 app.use("/api/assurance", requireAuth, assuranceRouter);
+app.use("/api/rapports", requireAuth, rapportsRouter);
 // Même raison : feuille de temps et objectifs ne concernent que le compte
 // connecté, dont l'identité vient du jeton.
 app.use("/api/planning", requireAuth, planningRouter);

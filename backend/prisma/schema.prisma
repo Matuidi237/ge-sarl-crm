@@ -146,11 +146,12 @@ model Utilisateur {
   notesPosees  Note[]               @relation("Notes")
   objectifs    ObjectifCommercial[] @relation("Objectifs")
 
-  clientsPossedes Client[]      @relation("Proprietaire")
-  accesAccordes   AccesClient[] @relation("Beneficiaire")
-  ventes          Vente[]       @relation("Vendeur")
-  polices         Police[]      @relation("Apporteur")
-  projets         Projet[]      @relation("ChefDeProjet")
+  clientsPossedes Client[]            @relation("Proprietaire")
+  accesAccordes   AccesClient[]       @relation("Beneficiaire")
+  ventes          Vente[]             @relation("Vendeur")
+  polices         Police[]            @relation("Apporteur")
+  rapports        RapportJournalier[]
+  projets         Projet[]            @relation("ChefDeProjet")
 
   @@index([responsableId])
 }
@@ -1224,4 +1225,51 @@ model Quittance {
   @@index([policeId])
   @@index([statut])
   @@index([dateEcheance])
+}
+
+// ==========================================================================
+// Rapport journalier du commercial
+// Une fiche par commercial et par jour : ce qu'il a fait, ce qu'il a produit,
+// ce qui le bloque, ce qu'il prévoit. Les chiffres sont déclaratifs : le
+// journal d'interactions n'existe pas encore, et un rapport qui attendrait
+// d'être calculé ne serait jamais rempli.
+// ==========================================================================
+
+enum StatutRapport {
+  BROUILLON
+  ENVOYE
+}
+
+model RapportJournalier {
+  id       String      @id @default(uuid())
+  auteur   Utilisateur @relation(fields: [auteurId], references: [id], onDelete: Cascade)
+  auteurId String
+  jour     DateTime    @db.Date
+
+  appels            Int @default(0)
+  visites           Int @default(0)
+  rendezVous        Int @default(0)
+  nouveauxProspects Int @default(0)
+  devisRemis        Int @default(0)
+  contratsSignes    Int @default(0)
+
+  primesSouscrites Decimal @default(0) @db.Decimal(18, 2)
+  encaissements    Decimal @default(0) @db.Decimal(18, 2)
+
+  faitsMarquants     String?
+  difficultes        String?
+  programmeLendemain String?
+
+  // Envoyé, le rapport est figé : la direction le lit comme une déclaration,
+  // et une déclaration qui change après lecture ne vaut plus rien.
+  statut   StatutRapport @default(BROUILLON)
+  envoyeLe DateTime?
+
+  estDemo Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([auteurId, jour])
+  @@index([jour])
 }

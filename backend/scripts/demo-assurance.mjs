@@ -83,6 +83,30 @@ const ENTREPRISES = ["Boulangerie Le Palmier", "Transports Mbeng Express", "Clin
 const VILLES = ["Douala", "Douala", "Douala", "Yaoundé", "Yaoundé", "Bafoussam", "Kribi", "Limbé"];
 const STATUTS_PROSPECT = ["A_CONTACTER", "CONTACTE", "RENDEZ_VOUS", "DEVIS_REMIS", "EN_NEGOCIATION", "PERDU", "SANS_SUITE"];
 
+/* Phrases de compte rendu, tirées pour que deux rapports voisins ne se
+   ressemblent pas mot pour mot. */
+const FAITS = [
+  "Rendez-vous chez {e} : le gérant veut comparer notre offre santé groupe avec son assureur actuel.",
+  "Deux renouvellements auto signés sur place, les clients ont réglé en espèces.",
+  "Visite de trois commerces au marché Mboppi, un devis multirisque professionnelle à préparer.",
+  "Relance de {e} : accord de principe, signature prévue en fin de semaine.",
+  "Bonne journée de prospection à Bonamoussadi, quatre contacts qualifiés.",
+  "Encaissement de la quittance trimestrielle de {e}.",
+];
+const DIFFICULTES = [
+  "Le client attend une réponse de la compagnie sur la franchise, à appuyer si possible.",
+  "Deux clients injoignables malgré trois relances.",
+  "Besoin de plaquettes santé famille, le stock est épuisé.",
+  "",
+  "",
+];
+const PROGRAMMES = [
+  "Relancer {e} pour la signature, puis tournée à Akwa.",
+  "Matinée au bureau pour les devis, après-midi en rendez-vous clients.",
+  "Visite chez {e}, encaissement de deux quittances en retard.",
+  "Prospection à Bonapriso et dépôt des devis de la semaine.",
+];
+
 const PAS_MOIS = { ANNUEL: 12, SEMESTRIEL: 6, TRIMESTRIEL: 3, MENSUEL: 1 };
 
 function tirerProduit(type) {
@@ -134,11 +158,12 @@ async function supprimer() {
   const objectifs = await prisma.objectifCommercial.deleteMany({
     where: { utilisateur: { identifiant: { startsWith: PREFIXE } } },
   });
+  const rapports = await prisma.rapportJournalier.deleteMany({ where: { estDemo: true } });
   const comptes = await prisma.utilisateur.deleteMany({
     where: { identifiant: { in: COMMERCIAUX.map((c) => c.identifiant) } },
   });
   const compagnies = await prisma.compagnie.deleteMany({ where: { estDemo: true } });
-  return { polices: polices.count, clients: clients.count, objectifs: objectifs.count, comptes: comptes.count, compagnies: compagnies.count };
+  return { rapports: rapports.count, polices: polices.count, clients: clients.count, objectifs: objectifs.count, comptes: comptes.count, compagnies: compagnies.count };
 }
 
 async function etat() {
@@ -198,6 +223,39 @@ async function installer() {
         estDemo: true,
       },
     });
+
+    /* Rapports des trois dernières semaines, du lundi au vendredi. La
+       plupart sont envoyés ; quelques jours restent en brouillon ou vides,
+       comme dans une vraie équipe. Aujourd'hui reste à remplir. */
+    for (let ilYa = 21; ilYa >= 1; ilYa--) {
+      const j = ajouterJours(auj, -ilYa);
+      if (j.getUTCDay() === 0 || j.getUTCDay() === 6) continue;
+      const tirage = alea();
+      if (tirage < 0.1 / c.poids) continue; // jour sans rapport
+      const envoye = tirage > 0.18;
+      const contrats = alea() < 0.35 * c.poids ? entre(1, 2) : 0;
+      const entreprise = parmi(ENTREPRISES);
+      await prisma.rapportJournalier.create({
+        data: {
+          auteurId: compte.id,
+          jour: j,
+          appels: Math.round(entre(6, 16) * c.poids),
+          visites: Math.round(entre(1, 5) * c.poids),
+          rendezVous: entre(0, 3),
+          nouveauxProspects: entre(0, 4),
+          devisRemis: entre(0, 3),
+          contratsSignes: contrats,
+          primesSouscrites: contrats ? prime(150_000, 2_500_000) : 0,
+          encaissements: alea() < 0.6 ? prime(80_000, 1_800_000) : 0,
+          faitsMarquants: parmi(FAITS).replace("{e}", entreprise),
+          difficultes: parmi(DIFFICULTES) || null,
+          programmeLendemain: parmi(PROGRAMMES).replace("{e}", parmi(ENTREPRISES)),
+          statut: envoye ? "ENVOYE" : "BROUILLON",
+          envoyeLe: envoye ? new Date(j.getTime() + 17 * 3_600_000 + entre(0, 120) * 60_000) : null,
+          estDemo: true,
+        },
+      });
+    }
 
     const nbClients = Math.round(22 * c.poids);
     const nbProspects = Math.round(14 * c.poids);

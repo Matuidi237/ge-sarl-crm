@@ -120,6 +120,23 @@ export function IconPlus({ size = 17, strokeWidth = 1.9, className }: IconProps)
   );
 }
 
+export function IconMinus({ size = 17, strokeWidth = 1.9, className }: IconProps) {
+  return (
+    <svg {...base(size, strokeWidth)} className={className}>
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+export function IconLock({ size = 15, strokeWidth = 1.8, className }: IconProps) {
+  return (
+    <svg {...base(size, strokeWidth)} className={className}>
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
 export function IconArrowRight({ size = 16, strokeWidth = 1.8, className }: IconProps) {
   return (
     <svg {...base(size, strokeWidth)} className={className}>

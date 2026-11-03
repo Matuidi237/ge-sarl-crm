@@ -34,7 +34,7 @@ import ObjectifsPage from "./pages/ObjectifsPage";
 import DetailObjectifPage from "./pages/DetailObjectifPage";
 import DetailClassementPage from "./pages/DetailClassementPage";
 import DetailPortefeuillePage from "./pages/DetailPortefeuillePage";
-import EnConstruction from "./pages/EnConstruction";
+import RapportsPage from "./pages/RapportsPage";
 
 /**
  * L'accueil dépend de la vue du rôle : le directeur général ouvre sur ses
@@ -199,7 +199,7 @@ export default function App() {
               path="/rapports"
               element={
                 <RouteCommerciale>
-                  <EnConstruction titre="nav.rapports" sousTitre="rapports.sousTitre" />
+                  <RapportsPage />
                 </RouteCommerciale>
               }
             />
