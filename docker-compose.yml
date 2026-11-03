@@ -1,4 +1,9 @@
-# CRM EasyTech Group SA — déploiement VPS derrière Nginx Proxy Manager.
+# CRM GE SARL : déploiement VPS derrière Nginx Proxy Manager.
+#
+# Les noms de conteneurs et de volume sont préfixés « ge-crm » : le VPS héberge
+# déjà le CRM EasyTech, dont les conteneurs s'appellent crm-db, crm-backend et
+# crm-web. Deux conteneurs ne peuvent pas porter le même nom, et un volume
+# partagé mélangerait les deux bases.
 #
 # Aucun port n'est publié sur l'hôte : le proxy joint le conteneur « crm-web »
 # par son nom, sur le réseau Docker partagé. La base et l'API ne sont accessibles
@@ -7,10 +12,12 @@
 # Variables attendues dans un fichier .env placé à côté de ce fichier
 # (voir .env.example).
 
+name: ge-sarl-crm
+
 services:
   db:
     image: postgres:16-alpine
-    container_name: crm-db
+    container_name: ge-crm-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -19,7 +26,7 @@ services:
       # Sans cela, une réinitialisation accidentelle du volume repartirait sans mot de passe.
       POSTGRES_HOST_AUTH_METHOD: scram-sha-256
     volumes:
-      - crm_pgdata:/var/lib/postgresql/data
+      - ge_crm_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
@@ -30,7 +37,7 @@ services:
 
   backend:
     build: ./backend
-    container_name: crm-backend
+    container_name: ge-crm-backend
     restart: unless-stopped
     depends_on:
       db:
@@ -45,6 +52,9 @@ services:
       # Laisser vides tant que Resend n'est pas configuré : les envois restent simulés.
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-}
+      # Fuseau de l'agence : les rapports journaliers et les échéances se
+      # comptent en jours de Douala, pas en jours UTC.
+      TZ: Africa/Douala
     # L'image Debian n'embarque ni wget ni curl : on interroge avec node,
     # dont le fetch global est disponible depuis la version 18.
     healthcheck:
@@ -62,18 +72,17 @@ services:
 
   web:
     build: ./frontend
-    container_name: crm-web
+    container_name: ge-crm-web
     restart: unless-stopped
     depends_on:
       - backend
     networks:
       - interne
       # Réseau partagé avec Nginx Proxy Manager : c'est par là que le proxy entre.
-      # Même réseau que le site easytech-site déjà en production.
       - webproxy
 
 volumes:
-  crm_pgdata:
+  ge_crm_pgdata:
 
 networks:
   interne:

@@ -1,19 +1,19 @@
 # Déploiement sur le VPS
 
-Même environnement que le site `easytech-site` déjà en production : VPS Ubuntu, Docker, Nginx Proxy Manager, réseau Docker partagé **`webproxy`**, code dans `/opt`.
+Même VPS et même schéma que le site EasyTech et le CRM EasyTech : Ubuntu, Docker, Nginx Proxy Manager, réseau Docker partagé **`webproxy`**, code dans `/opt`.
 
 ## En bref
 
 ```bash
 # Première fois
-cd /opt && git clone https://github.com/Matuidi237/crm-easytech.git crm && cd crm
+cd /opt && git clone https://github.com/Matuidi237/ge-sarl-crm.git && cd ge-sarl-crm
 ./scripts/installer.sh          # secrets, images, démarrage : tout en une commande
 
 # Mises à jour suivantes
-./scripts/deployer.sh           # sauvegarde, git pull, rebuild, vérification
+cd /opt/ge-sarl-crm && ./scripts/deployer.sh
 ```
 
-Le reste de ce document détaille ce que font ces scripts et comment intervenir à la main.
+Le reste de ce document détaille chaque étape.
 
 ## Ce qui tourne
 
@@ -21,40 +21,52 @@ Trois conteneurs, **aucun port publié sur l'hôte** :
 
 | Conteneur | Rôle | Joignable depuis |
 |---|---|---|
-| `crm-db` | PostgreSQL 16, volume `crm_pgdata` | réseau interne uniquement |
-| `crm-backend` | API Node/Express, applique les migrations au démarrage | réseau interne uniquement |
-| `crm-web` | nginx : sert l'application et relaie `/api` vers le backend | réseau du proxy |
+| `ge-crm-db` | PostgreSQL 16, volume `ge_crm_pgdata` | réseau interne uniquement |
+| `ge-crm-backend` | API Node/Express, applique les migrations au démarrage | réseau interne uniquement |
+| `ge-crm-web` | nginx : sert l'application et relaie `/api` vers le backend | réseau du proxy |
 
-Nginx Proxy Manager entre par `crm-web`. Comme l'application et l'API partagent la même origine, il n'y a ni CORS à configurer, ni adresse de serveur à figer dans le build.
+Les noms sont préfixés `ge-crm` pour cohabiter avec le CRM EasyTech, dont les conteneurs s'appellent `crm-db`, `crm-backend` et `crm-web`. Chaque CRM garde sa propre base.
+
+L'application et l'API partagent la même origine : ni CORS à configurer, ni adresse de serveur à figer dans le build.
+
+---
+
+## 0. Avant de commencer : le nom de domaine
+
+Choisir l'adresse du CRM (par exemple `crm.gesarl.cm`) et créer chez le gestionnaire du domaine un enregistrement **A** qui pointe vers l'adresse IP du VPS. Le certificat SSL de l'étape 2 ne peut être délivré qu'une fois ce pointage actif.
 
 ---
 
 ## 1. Première installation
 
+Se connecter au VPS depuis PowerShell :
+
+```powershell
+ssh ubuntu@ADRESSE_IP_DU_VPS
+```
+
+Puis, sur le VPS :
+
 ```bash
 cd /opt
-git clone https://github.com/Matuidi237/crm-easytech.git crm
-cd crm
+sudo git clone https://github.com/Matuidi237/ge-sarl-crm.git
+sudo chown -R $USER:$USER ge-sarl-crm
+cd ge-sarl-crm
+chmod +x scripts/*.sh
 ./scripts/installer.sh
 ```
 
-Le script vérifie que Docker et le réseau `webproxy` sont bien là, vous demande le mot de passe du premier administrateur, puis se charge du reste :
+Le script vérifie que Docker et le réseau `webproxy` sont présents, demande le mot de passe du premier administrateur, puis :
 
-- génération de `POSTGRES_PASSWORD` et `JWT_SECRET` avec `openssl` ;
-- écriture du `.env` en permissions `600` ;
-- chiffrement bcrypt du mot de passe administrateur ;
-- construction des images et démarrage ;
-- attente que l'API réponde, sinon affichage des journaux.
+- génère `POSTGRES_PASSWORD` et `JWT_SECRET` avec `openssl` ;
+- écrit le `.env` en permissions `600` ;
+- chiffre le mot de passe administrateur ;
+- construit les images et démarre ;
+- attend que l'API réponde, sinon affiche les journaux.
 
 Il refuse de s'exécuter si un `.env` existe déjà : régénérer les secrets déconnecterait tout le monde et rendrait le compte administrateur inutilisable.
 
-`JWT_SECRET` mérite un mot. Sans lui, le backend retombe sur un secret de développement présent dans le code source : n'importe qui pourrait forger un jeton d'administrateur. Le script le génère pour vous, il n'y a plus d'oubli possible.
-
-Le compte administrateur n'est créé qu'au tout premier démarrage, si la table des utilisateurs est vide. Les suivants se créent depuis l'interface.
-
-### Faire les choses à la main
-
-Si vous préférez ne pas utiliser le script : `cp .env.example .env`, remplissez chaque valeur (les commandes de génération sont en commentaire dans le fichier), puis `docker compose up -d --build`.
+Le compte administrateur n'est créé qu'au premier démarrage, si la table des utilisateurs est vide. Les comptes de la directrice et des commerciaux se créent ensuite depuis la page **Utilisateurs**.
 
 ---
 
@@ -66,49 +78,59 @@ Onglet **Details** :
 
 | Champ | Valeur |
 |---|---|
-| Domain Names | `crm.votre-domaine.com` |
+| Domain Names | le domaine choisi à l'étape 0 |
 | Scheme | `http` |
-| Forward Hostname / IP | `crm-web` |
+| Forward Hostname / IP | `ge-crm-web` |
 | Forward Port | `80` |
-| Cache Assets | **désactivé** (nginx gère déjà le cache, et cela éviterait de servir un `index.html` périmé après mise à jour) |
+| Cache Assets | **désactivé** (nginx gère déjà le cache ; sinon un `index.html` périmé serait servi après une mise à jour) |
 | Block Common Exploits | activé |
-| Websockets Support | inutile ici |
 
 Onglet **SSL** : *Request a new SSL Certificate*, puis *Force SSL* et *HTTP/2 Support*.
 
-Onglet **Advanced**, à ne pas oublier :
+Onglet **Advanced** :
 
 ```nginx
 client_max_body_size 30m;
 ```
 
-Sans cette ligne, l'import d'un fichier volumineux échouerait avec une erreur `413` avant même d'atteindre l'application. La limite interne est de 25 Mo.
+Sans cette ligne, l'import d'un fichier de prospects volumineux échoue en erreur `413` avant d'atteindre l'application.
 
 ---
 
 ## 3. Vérifier
 
 ```bash
-docker compose ps                 # les trois conteneurs en « running », db en « healthy »
-curl -I https://crm.votre-domaine.com
+docker compose ps        # trois conteneurs « running », db et backend « healthy »
 ```
 
-Puis dans un navigateur : la page de connexion doit s'afficher, et la connexion avec `ADMIN_USERNAME` fonctionner. Changez le mot de passe depuis **Mon profil** dès la première connexion.
-
-Un test utile de bout en bout : importer un petit CSV et vérifier qu'il apparaît dans la liste des fichiers importés.
+Puis, dans un navigateur, ouvrir le domaine : la page de connexion GE SARL doit s'afficher et le compte `admin` fonctionner. Changer le mot de passe depuis **Mon profil** dès la première connexion.
 
 ---
 
-## 4. Mettre à jour
+## 4. Données de démonstration (facultatif)
+
+Pour présenter l'outil avant la saisie des vraies données, le jeu de démonstration crée la directrice, cinq commerciaux, des clients, des contrats et trois semaines de rapports. Tous les comptes ont le mot de passe `DemoGE2026!` (identifiants `demo-directrice`, `demo-armelle`, `demo-cedric`, `demo-ines`, `demo-boris`, `demo-sandrine`).
 
 ```bash
-cd /opt/crm
+docker compose exec backend node scripts/demo-assurance.mjs              # charger
+docker compose exec backend node scripts/demo-assurance.mjs --etat       # compter
+docker compose exec backend node scripts/demo-assurance.mjs --supprimer  # retirer
+```
+
+**À retirer avant la mise en service réelle** : ces comptes ont un mot de passe connu de tous ceux qui lisent ce dépôt. La suppression n'emporte que ce qu'elle a créé.
+
+---
+
+## 5. Mettre à jour
+
+Après chaque `git push` depuis le poste de développement :
+
+```bash
+cd /opt/ge-sarl-crm
 ./scripts/deployer.sh
 ```
 
-Le script sauvegarde la base **avant** toute modification, récupère le code, affiche les commits appliqués, reconstruit, redémarre et vérifie que l'API répond. Les dix dernières sauvegardes sont conservées dans `sauvegardes/`.
-
-Les migrations de base de données en attente s'appliquent seules au démarrage du backend.
+Le script sauvegarde la base **avant** toute modification, récupère le code, affiche les commits appliqués, reconstruit, redémarre et vérifie que l'API répond. Les dix dernières sauvegardes restent dans `sauvegardes/`. Les migrations de base de données s'appliquent seules au démarrage du backend.
 
 En cas de doute sur les images :
 
@@ -118,48 +140,30 @@ docker compose build --no-cache && docker compose up -d
 
 ---
 
-## 5. Sauvegardes
+## 6. Sauvegardes
 
-Les données vivent dans le volume `crm_pgdata`. Sauvegarde :
-
-```bash
-docker compose exec -T db pg_dump -U crm crm | gzip > crm-$(date +%F).sql.gz
-```
-
-Restauration :
+Les données vivent dans le volume `ge_crm_pgdata`.
 
 ```bash
-gunzip -c crm-2026-08-27.sql.gz | docker compose exec -T db psql -U crm -d crm
+# Sauvegarde
+docker compose exec -T db pg_dump -U crm crm | gzip > ge-crm-$(date +%F).sql.gz
+
+# Restauration
+gunzip -c ge-crm-2026-11-03.sql.gz | docker compose exec -T db psql -U crm -d crm
 ```
 
-À automatiser avec une tâche cron quotidienne, en conservant les copies hors du VPS.
+À automatiser par une tâche cron quotidienne, en gardant des copies hors du VPS.
 
 ---
 
-## 6. Activer l'envoi réel des emails
+## 7. Dépannage
 
-Tant que `RESEND_API_KEY` et `MAIL_FROM` sont vides, les campagnes sont enregistrées en base mais **aucun email ne quitte le serveur**. L'interface l'indique après chaque envoi.
+| Symptôme | Cause probable |
+|---|---|
+| `Conflict. The container name "/ge-crm-web" is already in use` | une installation précédente traîne : `docker compose down` puis relancer |
+| `network webproxy declared as external, but could not be found` | Nginx Proxy Manager utilise un autre réseau : `docker network ls`, puis corriger le nom dans `docker-compose.yml` |
+| 502 Bad Gateway dans le navigateur | le proxy ne joint pas `ge-crm-web` : vérifier le Forward Hostname et que le conteneur est sur `webproxy` |
+| Connexion `admin` refusée juste après l'installation | hash du mot de passe tronqué : la ligne `ADMIN_PASSWORD_HASH` du `.env` doit être entre guillemets simples |
+| Erreur 413 à l'import | ligne `client_max_body_size 30m;` absente de l'onglet Advanced |
 
-Pour activer :
-
-1. Créer un compte Resend et y vérifier votre domaine (enregistrements DNS SPF et DKIM).
-2. Renseigner `RESEND_API_KEY` et `MAIL_FROM` (par exemple `newsletter@easytechgroup.com`) dans `.env`.
-3. `docker compose up -d backend`
-
-Testez d'abord sur une campagne ciblant un secteur ne contenant qu'un ou deux clients.
-
----
-
-## 7. Points de vigilance
-
-**L'envoi de newsletter est synchrone.** Les destinataires sont traités un par un dans la requête HTTP. Sur 1 000 fiches, l'appel peut durer plusieurs minutes. Les délais nginx sont réglés à 600 s en conséquence, mais si vos volumes augmentent il faudra passer l'envoi en tâche de fond.
-
-**PostgreSQL n'est pas exposé.** C'est voulu. Pour y accéder ponctuellement :
-
-```bash
-docker compose exec db psql -U crm -d crm
-```
-
-**Le fichier `.env` n'est pas versionné.** Il vit uniquement sur le VPS. Gardez une copie des secrets dans votre gestionnaire de mots de passe : les perdre signifie déconnecter tout le monde et régénérer le compte administrateur.
-
-**Le dossier `test-data/` est exclu du dépôt.** Il contient des milliers d'adresses email de vos clients, qui n'ont pas à se retrouver sur GitHub. Transférez ces fichiers séparément si besoin, ou importez-les depuis votre poste via l'interface.
+Journaux : `docker compose logs --tail 60 backend`.

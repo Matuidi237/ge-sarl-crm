@@ -259,7 +259,7 @@ export default function ClientsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `clients-easytech-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `clients-ge-sarl-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {

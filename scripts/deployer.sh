@@ -22,7 +22,7 @@ fi
 
 echo "Sauvegarde de la base avant mise à jour…"
 mkdir -p sauvegardes
-FICHIER="sauvegardes/crm-$(date +%F-%H%M).sql.gz"
+FICHIER="sauvegardes/ge-crm-$(date +%F-%H%M).sql.gz"
 # On ne source jamais le .env : le hash bcrypt contient des « $ » que bash
 # interpréterait comme des paramètres. Les identifiants sont lus directement
 # dans le conteneur, où ils sont déjà définis (guillemets simples volontaires).

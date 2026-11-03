@@ -10,8 +10,8 @@ RESEAU="webproxy"
 vert() { printf '\033[0;32m%s\033[0m\n' "$1"; }
 rouge() { printf '\033[0;31m%s\033[0m\n' "$1"; }
 
-echo "Installation du CRM EasyTech Group SA"
-echo "======================================"
+echo "Installation du CRM GE SARL"
+echo "==========================="
 echo
 
 # --- Vérifications préalables -------------------------------------------------
@@ -121,10 +121,10 @@ cat <<'FIN'
 
 Dernière étape, dans Nginx Proxy Manager (Proxy Hosts > Add Proxy Host) :
 
-  Domain Names           crm.easytechgroup.net   (ou tout autre domaine pointé
-                                                  sur le VPS en attendant)
+  Domain Names           le sous-domaine choisi pour le CRM, déjà pointé
+                         sur l'adresse IP du VPS
   Scheme                 http
-  Forward Hostname / IP  crm-web
+  Forward Hostname / IP  ge-crm-web
   Forward Port           80
   Cache Assets           désactivé
   Block Common Exploits  activé
@@ -136,6 +136,6 @@ Cette dernière ligne n'est pas facultative : sans elle vos imports de fichiers
 échouent en erreur 413 avant même d'atteindre l'application.
 
 Connectez-vous avec l'identifiant « admin » et le mot de passe choisi au début
-de cette installation. Les comptes de vos collaborateurs se créent ensuite
-depuis la page Utilisateurs, sans intervention sur le serveur.
+de cette installation. Les comptes de la directrice et des commerciaux
+se créent ensuite depuis la page Utilisateurs, sans intervention sur le serveur.
 FIN

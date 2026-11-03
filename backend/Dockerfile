@@ -23,7 +23,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && apt-get install -y --no-install-recommends openssl ca-certificates tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # Dépendances de production uniquement. « prisma » est volontairement dans les
@@ -35,6 +35,9 @@ RUN npm ci --omit=dev
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/dist ./dist
 COPY prisma ./prisma
+# Le jeu de démonstration, pour présenter l'outil avant la saisie des vraies
+# données. Il ne s'exécute que sur demande explicite (voir DEPLOIEMENT.md).
+COPY scripts ./scripts
 
 # Sans ce chown, l'utilisateur « node » ne peut pas écrire dans node_modules,
 # et prisma migrate deploy échoue avec « Can't write to @prisma/engines ».
