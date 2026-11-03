@@ -14,7 +14,10 @@ import NewsletterDetailPage from "./pages/NewsletterDetailPage";
 import ProfilPage from "./pages/ProfilPage";
 import UtilisateursPage from "./pages/UtilisateursPage";
 import PermissionsPage from "./pages/PermissionsPage";
-import DirectionPage from "./pages/DirectionPage";
+import DirectricePage from "./pages/DirectricePage";
+import CommerciauxPage from "./pages/CommerciauxPage";
+import FicheCommercialAssurancePage from "./pages/FicheCommercialAssurancePage";
+import RapportsEquipePage from "./pages/RapportsEquipePage";
 import EquipesPage from "./pages/EquipesPage";
 import EquipeCommercialePage from "./pages/EquipeCommercialePage";
 import FicheCommercialPage from "./pages/FicheCommercialPage";
@@ -37,13 +40,13 @@ import DetailPortefeuillePage from "./pages/DetailPortefeuillePage";
 import RapportsPage from "./pages/RapportsPage";
 
 /**
- * L'accueil dépend de la vue du rôle : le directeur général ouvre sur ses
+ * L'accueil dépend de la vue du rôle : la direction ouvre sur ses
  * indicateurs, le commercial sur les siens, tout le monde sur l'état de la
  * base clients.
  */
 function Accueil() {
   const { utilisateur } = useAuth();
-  if (estVueDirection(utilisateur?.role)) return <DirectionPage />;
+  if (estVueDirection(utilisateur?.role)) return <DirectricePage />;
   if (estVueCommerciale(utilisateur?.role)) return <CommercialPage />;
   return <DashboardPage />;
 }
@@ -203,6 +206,18 @@ export default function App() {
                 </RouteCommerciale>
               }
             />
+            {/* Le parcours de la directrice : l'équipe, la fiche de chacun,
+                les rapports reçus. */}
+            <Route path="/commerciaux" element={<RouteDirection><CommerciauxPage /></RouteDirection>} />
+            <Route
+              path="/commerciaux/:id"
+              element={
+                <RouteDirection>
+                  <FicheCommercialAssurancePage />
+                </RouteDirection>
+              }
+            />
+            <Route path="/rapports-equipe" element={<RouteDirection><RapportsEquipePage /></RouteDirection>} />
             <Route
               path="/planning"
               element={

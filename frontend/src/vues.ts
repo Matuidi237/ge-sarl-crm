@@ -33,17 +33,16 @@ const NAV_STANDARD: EntreeNav[] = [
   { to: "/a-chiffrer", cle: "nav.aChiffrer", icone: "coins", requiert: "ventes.cout" },
 ];
 
-/** Vue de la direction générale. */
+/**
+ * Vue de la directrice : ses indicateurs, son équipe, les rapports qu'elle
+ * reçoit, la base clients. Les équipes, campagnes et partenaires hérités du
+ * dépôt d'origine n'ont pas d'usage chez GE SARL.
+ */
 const NAV_DG: EntreeNav[] = [
   { to: "/", cle: "nav.dashboard", icone: "dashboard", end: true },
-  { to: "/equipes", cle: "nav.equipes", icone: "team" },
+  { to: "/commerciaux", cle: "nav.commerciaux", icone: "team" },
+  { to: "/rapports-equipe", cle: "nav.rapportsEquipe", icone: "file" },
   { to: "/clients", cle: "nav.clients", icone: "users" },
-  { to: "/campagnes", cle: "nav.campagnes", icone: "mail", requiert: "newsletters.voir" },
-  { to: "/partenaires", cle: "nav.partenaires", icone: "handshake" },
-  /* Les commandes dont le prix d'achat manque. L'onglet est visible pour qui
-     peut le renseigner : sans lui, la file s'allongerait sans que personne
-     ne la voie, et les commissions resteraient en suspens. */
-  { to: "/a-chiffrer", cle: "nav.aChiffrer", icone: "coins", requiert: "ventes.cout" },
 ];
 
 /**

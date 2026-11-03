@@ -50,7 +50,7 @@ const corps = z.object({
 
 type Rapport = Awaited<ReturnType<typeof prisma.rapportJournalier.findFirst>>;
 
-function serialiser(r: NonNullable<Rapport>) {
+export function serialiser(r: NonNullable<Rapport>) {
   return {
     jour: r.jour.toISOString().slice(0, 10),
     appels: r.appels,

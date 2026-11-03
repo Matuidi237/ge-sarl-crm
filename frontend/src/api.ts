@@ -1705,3 +1705,81 @@ export async function enregistrerRapport(jour: string, valeurs: ValeursRapport, 
   if (!res.ok) throw new Error((await res.json()).error ?? "Erreur lors de l'enregistrement du rapport.");
   return res.json() as Promise<RapportJournalier>;
 }
+
+/* ----------------------------------------------------------------- Pilotage */
+
+export type StatutFiche =
+  | "A_CONTACTER"
+  | "CONTACTE"
+  | "RENDEZ_VOUS"
+  | "DEVIS_REMIS"
+  | "EN_NEGOCIATION"
+  | "CLIENT"
+  | "PERDU"
+  | "SANS_SUITE";
+
+export type PerfCommercial = {
+  id: string;
+  nomComplet: string;
+  primes: number;
+  objectif: number | null;
+  completionPct: number | null;
+  nouvelles: number;
+  prospects: number;
+  impayees: number;
+  tauxRenouvellementPct: number | null;
+  rapportsEnvoyes: number;
+};
+
+export type TableauPilotage = {
+  annee: number;
+  partEcoulee: number;
+  primes: { realise: number; objectif: number | null };
+  prospects: {
+    enCours: number;
+    nouveauxCeMois: number;
+    pipeline: { statut: StatutFiche; nb: number }[];
+    clients: number;
+  };
+  produits: { produit: string; branche: BrancheAssurance; nb: number; primes: number }[];
+  nbAffairesNouvelles: number;
+  commissions: { acquises: number; attendues: number; impayees: number; montantImpaye: number };
+  contratsEnCours: number;
+  parBranche: { branche: BrancheAssurance; primes: number }[];
+  parMois: { mois: string; ca: number; benefice: number; nbVentes: number }[];
+  commerciaux: PerfCommercial[];
+  rapportsAttendus: number;
+};
+
+export type FichePilotage = {
+  identite: { id: string; nomComplet: string; fonction: string | null; actif: boolean };
+  tableau: TableauAssurance;
+  rapports: RapportJournalier[];
+};
+
+/** Un brouillon n'arrive que par son statut : la direction ne lit que ce qui lui est envoyé. */
+export type RapportVuDirection = RapportJournalier | { jour: string; statut: "BROUILLON" };
+
+export type SemaineRapports = {
+  aujourdhui: string;
+  jours: string[];
+  commerciaux: { id: string; nomComplet: string; rapports: Record<string, RapportVuDirection> }[];
+};
+
+export async function fetchTableauPilotage() {
+  const res = await authedFetch("/api/pilotage/tableau");
+  if (!res.ok) throw new Error("Erreur lors du chargement du tableau de bord de l'agence.");
+  return res.json() as Promise<TableauPilotage>;
+}
+
+export async function fetchFichePilotage(id: string) {
+  const res = await authedFetch(`/api/pilotage/commercial/${id}`);
+  if (!res.ok) throw new Error((await res.json()).error ?? "Erreur lors du chargement de la fiche.");
+  return res.json() as Promise<FichePilotage>;
+}
+
+export async function fetchSemaineRapports(lundi: string) {
+  const res = await authedFetch(`/api/pilotage/rapports/semaine/${lundi}`);
+  if (!res.ok) throw new Error("Erreur lors du chargement des rapports de l'équipe.");
+  return res.json() as Promise<SemaineRapports>;
+}

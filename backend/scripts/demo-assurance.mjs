@@ -52,6 +52,11 @@ const COMMERCIAUX = [
   { identifiant: "demo-sandrine", nomComplet: "Sandrine KAMGA", poids: 0.6, objectif: 35_000_000 },
 ];
 
+/* La direction de l'agence, avec les droits du rôle DG. Nom fictif comme les
+   autres comptes de démonstration. */
+const DIRECTRICE = { identifiant: "demo-directrice", nomComplet: "Henriette NKOA", fonction: "Directrice générale" };
+const IDENTIFIANTS = [DIRECTRICE.identifiant, ...COMMERCIAUX.map((c) => c.identifiant)];
+
 /** Taux d'exemple, affaire nouvelle puis renouvellement. */
 const BAREME = {
   AUTO: [12, 10],
@@ -160,7 +165,7 @@ async function supprimer() {
   });
   const rapports = await prisma.rapportJournalier.deleteMany({ where: { estDemo: true } });
   const comptes = await prisma.utilisateur.deleteMany({
-    where: { identifiant: { in: COMMERCIAUX.map((c) => c.identifiant) } },
+    where: { identifiant: { in: IDENTIFIANTS } },
   });
   const compagnies = await prisma.compagnie.deleteMany({ where: { estDemo: true } });
   return { rapports: rapports.count, polices: polices.count, clients: clients.count, objectifs: objectifs.count, comptes: comptes.count, compagnies: compagnies.count };
@@ -171,7 +176,7 @@ async function etat() {
     prisma.police.count({ where: { estDemo: true } }),
     prisma.quittance.count({ where: { police: { estDemo: true } } }),
     prisma.client.count({ where: { champsPersonnalises: { path: ["demo"], equals: true } } }),
-    prisma.utilisateur.count({ where: { identifiant: { in: COMMERCIAUX.map((c) => c.identifiant) } } }),
+    prisma.utilisateur.count({ where: { identifiant: { in: IDENTIFIANTS } } }),
   ]);
   return { comptes, clients, polices, quittances };
 }
@@ -194,6 +199,10 @@ async function installer() {
         ]),
       },
     },
+  });
+
+  await prisma.utilisateur.create({
+    data: { ...DIRECTRICE, role: "DG", motDePasseHash: hash, pays: "Cameroun" },
   });
 
   let numero = 100000;
@@ -276,6 +285,10 @@ async function installer() {
           proprietaireId: compte.id,
           commercialEnCharge: c.nomComplet,
           champsPersonnalises: { demo: true },
+          /* Des fiches toutes créées aujourd'hui feraient de chaque prospect
+             un « nouveau du mois ». Les prospects s'étalent sur quatre mois,
+             les clients sur les deux ans de leur ancienneté. */
+          createdAt: new Date(aujourdhui.getTime() - (estClient ? entre(400, 760) : entre(0, 120)) * 86_400_000),
         },
       });
       bilan.clients += 1;

@@ -24,15 +24,16 @@ function rangDe(classement: { id: string; score: number }[], id: string): number
 /**
  * Tableau de bord d'un commercial d'agence d'assurance.
  *
- * L'identité vient du jeton, jamais d'un paramètre : un commercial n'a pas à
- * lire la performance d'un collègue en modifiant l'URL.
+ * Une seule fonction pour le commercial et pour la direction qui consulte sa
+ * fiche : un chiffre calculé deux fois finit par différer, et c'est le
+ * commercial qui aurait à s'expliquer sur l'écart.
  *
  * Les primes se comptent sur les quittances et non sur la prime annuelle des
  * polices. C'est ce que la compagnie appelle « primes émises », et c'est la
  * seule mesure qui tombe dans le bon mois quand une prime est fractionnée.
  */
-assuranceRouter.get("/mon-tableau", async (req, res) => {
-  const moi = req.utilisateur!;
+export async function tableauAssurance(utilisateurId: string) {
+  const moi = { id: utilisateurId };
   const maintenant = new Date();
   const annee = fenetreDe("ANNEE", maintenant);
   // Bornes en UTC : elles se comparent à des colonnes @db.Date.
@@ -43,7 +44,7 @@ assuranceRouter.get("/mon-tableau", async (req, res) => {
     where: { id: moi.id },
     select: { objectifsPersonnels: true },
   });
-  if (!compte) return res.status(404).json({ error: "Compte introuvable." });
+  if (!compte) return null;
 
   const [baremes, mesPolices, quittancesEquipe, equipe, objectifs] = await Promise.all([
     prisma.baremeCommission.findMany(),
@@ -202,7 +203,7 @@ assuranceRouter.get("/mon-tableau", async (req, res) => {
 
   const aDesPrimes = primesAnnee > 0;
 
-  res.json({
+  return {
     objectifAnnuel: {
       annee: annee.debut.getFullYear(),
       cible: objectif?.cibleCaXAF == null ? null : Math.round(Number(objectif.cibleCaXAF)),
@@ -233,5 +234,13 @@ assuranceRouter.get("/mon-tableau", async (req, res) => {
     parMois,
     polices: polices.slice(0, 15),
     nbPolices: polices.length,
-  });
+  };
+}
+
+/* L'identité vient du jeton, jamais d'un paramètre : un commercial n'a pas à
+   lire la performance d'un collègue en modifiant l'URL. */
+assuranceRouter.get("/mon-tableau", async (req, res) => {
+  const tableau = await tableauAssurance(req.utilisateur!.id);
+  if (!tableau) return res.status(404).json({ error: "Compte introuvable." });
+  res.json(tableau);
 });

@@ -7914,3 +7914,295 @@ td.col-actions {
     flex: 1;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Parcours de la directrice (pd-) et lecture des rapports de l'équipe (re-)
+   ------------------------------------------------------------------------ */
+
+.pd-releve {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pd-releve li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.pd-releve li:first-child {
+  border-top: 0;
+}
+
+.pd-releve-nom {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pd-lien-nom {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pd-lien-nom:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+.pd-tri {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pd-tri:hover {
+  color: var(--brand);
+}
+
+.pd-ligne {
+  cursor: pointer;
+}
+
+.pd-objectif {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pd-objectif-barre {
+  width: 56px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--brand-100);
+  overflow: hidden;
+}
+
+.pd-objectif-barre span {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+}
+
+.pd-retard {
+  color: #b42318;
+  font-weight: 600;
+}
+
+.pd-rapports {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pd-rapports a {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 2px 16px;
+  padding: 11px 4px;
+  border-top: 1px solid var(--border);
+  color: inherit;
+  text-decoration: none;
+}
+
+.pd-rapports li:first-child a {
+  border-top: 0;
+}
+
+.pd-rapports a:hover {
+  background: var(--surface-2);
+}
+
+.pd-rapports-jour {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.pd-rapports-jour::first-letter {
+  text-transform: uppercase;
+}
+
+.pd-rapports-chiffres {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.pd-rapports-texte {
+  grid-column: 2;
+  font-size: 13px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.re-semaine-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.re-totaux {
+  margin-bottom: 18px;
+}
+
+.re-grille-carte {
+  padding: 0;
+  overflow: hidden;
+}
+
+.re-grille-defile {
+  overflow-x: auto;
+}
+
+/* Largeur fixe : six jours de même largeur, quel que soit le contenu. */
+.re-grille {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  table-layout: fixed;
+}
+
+.re-grille th:first-child {
+  width: 200px;
+}
+
+.re-grille th,
+.re-grille td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.re-grille tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.re-grille th:first-child,
+.re-grille td:first-child {
+  text-align: left;
+  padding-left: 18px;
+}
+
+.re-grille thead th {
+  background: var(--surface-2);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.re-jour-nom {
+  display: block;
+  text-transform: capitalize;
+}
+
+.re-jour-num {
+  display: block;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.re-aujourdhui .re-jour-num {
+  color: var(--brand);
+}
+
+.re-nom {
+  font-weight: 600;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.re-cellule {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 52px;
+  justify-content: center;
+  padding: 6px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+
+button.re-cellule {
+  cursor: pointer;
+}
+
+button.re-cellule:hover {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+button.re-cellule.actif {
+  background: var(--brand-100);
+  border-color: var(--brand-200);
+}
+
+.re-cellule .pill {
+  white-space: nowrap;
+}
+
+.re-cellule-chiffres {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.re-lecture {
+  margin-top: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.re-lecture .field {
+  margin: 0;
+}
+
+.re-invite {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+@media (max-width: 720px) {
+  .re-semaine-nav {
+    width: 100%;
+  }
+
+  .re-semaine-nav .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .pd-rapports a {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pd-rapports-texte {
+    grid-column: 1;
+  }
+}
+
+/* Un nom ou un montant coupé en deux lignes se relit mal dans un classement. */
+.pd-equipe th,
+.pd-equipe td {
+  white-space: nowrap;
+}
